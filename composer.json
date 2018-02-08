@@ -1,0 +1,28 @@
+{
+    "name": "giacocorsiglia/stubs-generator",
+    "description": "Generate stubs from a library for IDE completion and static analysis.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "StubsGenerator\\": "src"
+        }
+    },
+    "require": {
+        "php": ">=7.1",
+        "symfony/console": "^4.0",
+        "nikic/php-parser": "^3.1"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^0.3.92",
+        "phpunit/phpunit": "^7.0",
+        "friendsofphp/php-cs-fixer": "^2.10"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Giaco Corsiglia",
+            "email": "GiacoCorsiglia@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}

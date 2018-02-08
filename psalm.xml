@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<psalm
+    stopOnFirstError="true"
+    useDocblockTypes="true"
+    useAssertForType="true"
+    rememberPropertyAssignmentsAfterCall="true"
+>
+    <projectFiles>
+        <directory name="src" />
+        <file name="bin/generate-stubs" />
+    </projectFiles>
+</psalm>

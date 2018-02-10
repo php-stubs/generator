@@ -1,6 +1,8 @@
 <?php
 namespace StubsGenerator;
 
+use ArrayIterator;
+use PhpParser\PrettyPrinter\Standard;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -8,6 +10,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Finder\SplFileInfo;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
  * The command to generate stubs from the CLI.
@@ -23,64 +27,133 @@ class GenerateStubsCommand extends Command
         ['classes', StubsGenerator::CLASSES],
         ['interfaces', StubsGenerator::INTERFACES],
         ['traits', StubsGenerator::TRAITS],
+        ['documented-globals', StubsGenerator::DOCUMENTED_GLOBALS],
+        ['undocumented-globals', StubsGenerator::UNDOCUMENTED_GLOBALS],
+        ['globals', StubsGenerator::GLOBALS],
     ];
 
     /**
-     * @return void
+     * @psalm-suppress PropertyNotSetInConstructor
+     * @var Filesystem
      */
-    public function configure()
+    private $filesystem;
+
+    /**
+     * @psalm-suppress PropertyNotSetInConstructor
+     * @var string|null
+     */
+    private $outFile;
+
+    /** @var bool */
+    private $confirmedOverwrite = false;
+
+    public function configure(): void
     {
         $this->setName('run')
-            ->setDescription('Generates stubs for the PHP files in the given directories')
-            ->addArgument('directories', InputArgument::IS_ARRAY | InputArgument::REQUIRED, 'The directories from which to generate stubs.');
+            ->setDescription('Generates stubs for the PHP files in the given sources')
+            ->addArgument('sources', InputArgument::IS_ARRAY | InputArgument::REQUIRED, 'The sources from which to generate stubs.  Either directories or specific files.  At least one must be specified.')
+            ->addOption('out', null, InputOption::VALUE_OPTIONAL, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.');
 
         foreach (self::SYMBOL_OPTIONS as $opt) {
             $this->addOption($opt[0], null, InputOption::VALUE_NONE, "Include declarations for {$opt[0]}");
         }
     }
 
+    protected function initialize(InputInterface $input, OutputInterface $output): void
+    {
+        $this->filesystem = new Filesystem();
+        $out = $input->getOption('out');
+        $this->outFile = $out ? $this->resolvePath($out) : null;
+    }
+
+    protected function interact(InputInterface $input, OutputInterface $output): void
+    {
+        if ($this->outFile && $this->filesystem->exists($this->outFile)) {
+            if (is_dir($this->outFile)) {
+                throw new InvalidArgumentException("Bad --out: '{$this->outFile}' is a directory, please pass a file.");
+            }
+
+            $helper = $this->getHelper('question');
+            $question = new ConfirmationQuestion("The file '{$this->outFile}' already exists.  Overwrite?", false);
+            if (!$helper->ask($input, $output, $question)) {
+                exit(1);
+            }
+
+            $this->confirmedOverwrite = true;
+        }
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $finder = Finder::create()->in($this->parseDirectories($input));
+        $finder = $this->parseSources($input);
         $generator = new StubsGenerator($this->parseSymbols($input));
 
-        $output->writeln('<?php');
-        foreach ($generator->generate($finder) as $file => $lines) {
-            $output->writeln("// $file");
-            $output->writeln($lines);
+        $result = $generator->generate($finder);
+
+        $printer = new Standard();
+        if ($this->outFile) {
+            if ($this->confirmedOverwrite || !$this->filesystem->exists($this->outFile)) {
+                $this->filesystem->dumpFile($this->outFile, $result->prettyPrint($printer));
+            } else {
+                throw new InvalidArgumentException("Cannot write to '{$this->outFile}'.");
+            }
+        } else {
+            $output->writeln($result->prettyPrint($printer));
         }
     }
 
     /**
-     * Validate and get full paths to the requested directories.
+     * Resolves a path argument relative to the working directory.
+     *
+     * @param string $path Input path.
+     *
+     * @return string Resolved path.
+     */
+    private function resolvePath(string $path): string
+    {
+        if (!$this->filesystem->isAbsolutePath($path)) {
+            $path = getcwd() . DIRECTORY_SEPARATOR . $path;
+        }
+        return realpath($path);
+    }
+
+    /**
+     * Validate and get full paths to the requested sources.
      *
      * @param InputInterface $input
      *
-     * @throws InvalidArgumentException If any directory does not exist.
+     * @throws InvalidArgumentException If any source does not exist.
      *
-     * @return string[] List of full paths to directories.
+     * @return Finder Finder including all sources.
      */
-    private function parseDirectories(InputInterface $input): array
+    private function parseSources(InputInterface $input): Finder
     {
-        $filesystem = new Filesystem();
+        $finder = Finder::create();
 
-        $directories = $input->getArgument('directories');
-        foreach ($directories as &$directory) {
-            if (!$filesystem->isAbsolutePath($directory)) {
-                $directory = getcwd() . DIRECTORY_SEPARATOR . $directory;
+        $sources = $input->getArgument('sources');
+        $singleFiles = [];
+        foreach ($sources as $source) {
+            $source = $this->resolvePath($source);
+            if (!$this->filesystem->exists($source)) {
+                throw new InvalidArgumentException("Bad path: '$source' does not exist.");
             }
-            $directory = realpath($directory);
-            if (!is_dir($directory)) {
-                throw new InvalidArgumentException("Bad path: '$directory' is not a directory.");
+            if (is_dir($source)) {
+                $finder->in($source);
+            } else {
+                // HACK: Dumb but necessary to get instance of correct thing.
+                $singleFiles[] = new SplFileInfo($source, $source, $source);
             }
         }
+        if ($singleFiles) {
+            $finder->append(new ArrayIterator($singleFiles));
+        }
 
-        return $directories;
+        return $finder;
     }
 
     /**
-     * If any symbol types are passed explicitly, only use those; otherwise
-     * default to all of them.
+     * If any symbol types are passed explicitly, only use those; otherwise use
+     * the default set.
      *
      * @param InputInterface $input
      *
@@ -94,6 +167,6 @@ class GenerateStubsCommand extends Command
                 $symbols |= $opt[1];
             }
         }
-        return $symbols ?: StubsGenerator::ALL;
+        return $symbols ?: StubsGenerator::DEFAULT;
     }
 }

@@ -9,9 +9,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\SplFileInfo;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 /**
  * The command to generate stubs from the CLI.
@@ -114,7 +114,7 @@ class GenerateStubsCommand extends Command
         if (!$this->filesystem->isAbsolutePath($path)) {
             $path = getcwd() . DIRECTORY_SEPARATOR . $path;
         }
-        return realpath($path);
+        return $path;
     }
 
     /**

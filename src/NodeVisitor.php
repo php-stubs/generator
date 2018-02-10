@@ -17,9 +17,8 @@ use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
-use PhpParser\PrettyPrinterAbstract;
 
-class NodeVisitor extends NodeVisitorAbstract implements Result
+class NodeVisitor extends NodeVisitorAbstract
 {
     /** @var bool */
     private $needsFunctions;
@@ -186,14 +185,9 @@ class NodeVisitor extends NodeVisitorAbstract implements Result
         }
     }
 
-    public function prettyPrint(PrettyPrinterAbstract $printer): string
+    public function getCounts(): array
     {
-        return $printer->prettyPrintFile($this->getStubStmts());
-    }
-
-    public function getIterator()
-    {
-        return new ArrayIterator($this->getStubStmts());
+        return $this->counts;
     }
 
     /**

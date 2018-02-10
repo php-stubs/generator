@@ -1,8 +1,10 @@
 <?php
 namespace StubsGenerator;
 
+use PhpParser\Error;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
+use RuntimeException;
 use Symfony\Component\Finder\Finder;
 
 class StubsGenerator
@@ -100,11 +102,20 @@ class StubsGenerator
         $visitor = new NodeVisitor($this->symbols);
         $traverser->addVisitor($visitor);
 
+        $unparsed = [];
         foreach ($finder as $file) {
-            /** @psalm-suppress PossiblyNullArgument */
-            $traverser->traverse($parser->parse($file->getContents()));
+            $stmts = null;
+            try {
+                $stmts = $parser->parse($file->getContents());
+            } catch (Error|RuntimeException $e) {
+                $unparsed[$file->getPathname()] = $e;
+            }
+
+            if ($stmts) {
+                $traverser->traverse($stmts);
+            }
         }
 
-        return $visitor;
+        return new Result($visitor, $unparsed);
     }
 }

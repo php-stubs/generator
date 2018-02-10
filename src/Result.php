@@ -43,6 +43,33 @@ class Result implements IteratorAggregate
         return $this->visitor->getStubStmts();
     }
 
+    public function getStats(): array
+    {
+        return array_map('count', $this->visitor->getCounts());
+    }
+
+    public function getDuplicates(): array
+    {
+        $dupes = [];
+        foreach ($this->visitor->getCounts() as $type => $names) {
+            foreach ($names as $name => $count) {
+                if ($count > 1) {
+                    $dupes[] = [
+                        'type' => $type,
+                        'name' => $name,
+                        'count' => $count,
+                    ];
+                }
+            }
+        }
+
+        usort($dupes, function ($a, $b) {
+            return $a['type'] <=> $b['type'] ?: $a['name'] <=> $b['name'];
+        });
+
+        return $dupes;
+    }
+
     /**
      * Shortcut to pretty print all the stubs as one file.
      *

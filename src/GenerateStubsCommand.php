@@ -9,7 +9,8 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ConfirmationQuestion;
+use Symfony\Component\Console\Style\OutputStyle;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\SplFileInfo;
 
@@ -52,7 +53,8 @@ class GenerateStubsCommand extends Command
         $this->setName('run')
             ->setDescription('Generates stubs for the PHP files in the given sources')
             ->addArgument('sources', InputArgument::IS_ARRAY | InputArgument::REQUIRED, 'The sources from which to generate stubs.  Either directories or specific files.  At least one must be specified.')
-            ->addOption('out', null, InputOption::VALUE_OPTIONAL, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.');
+            ->addOption('out', null, InputOption::VALUE_OPTIONAL, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.')
+            ->addOption('stats', null, InputOption::VALUE_NONE, 'Whether to print stats instead of outputting stubs.  Stats will always be printed if --out is provided.');
 
         foreach (self::SYMBOL_OPTIONS as $opt) {
             $this->addOption($opt[0], null, InputOption::VALUE_NONE, "Include declarations for {$opt[0]}");
@@ -73,9 +75,9 @@ class GenerateStubsCommand extends Command
                 throw new InvalidArgumentException("Bad --out: '{$this->outFile}' is a directory, please pass a file.");
             }
 
-            $helper = $this->getHelper('question');
-            $question = new ConfirmationQuestion("The file '{$this->outFile}' already exists.  Overwrite?", false);
-            if (!$helper->ask($input, $output, $question)) {
+
+            $io = new SymfonyStyle($input, $output);
+            if (!$io->confirm("The file '{$this->outFile}' already exists.  Overwrite?", false)) {
                 exit(1);
             }
 
@@ -85,6 +87,8 @@ class GenerateStubsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $io = new SymfonyStyle($input, $output);
+
         $finder = $this->parseSources($input);
         $generator = new StubsGenerator($this->parseSymbols($input));
 
@@ -92,13 +96,33 @@ class GenerateStubsCommand extends Command
 
         $printer = new Standard();
         if ($this->outFile) {
+            $io->title('PHP Stubs Generator');
+
             if ($this->confirmedOverwrite || !$this->filesystem->exists($this->outFile)) {
                 $this->filesystem->dumpFile($this->outFile, $result->prettyPrint($printer));
             } else {
                 throw new InvalidArgumentException("Cannot write to '{$this->outFile}'.");
             }
+
+            $io->success("Stubs written to {$this->outFile}");
+
+            $this->printStats($io, $result);
+        } elseif ($input->hasOption('stats')) {
+            $io->title('PHP Stubs Generator: Stats');
+
+            $this->printStats($io, $result);
         } else {
             $output->writeln($result->prettyPrint($printer));
+        }
+    }
+
+    private function printStats(OutputStyle $io, Result $result): void
+    {
+        $io->table(array_keys($result->getStats()), [$result->getStats()]);
+
+        if ($dupes = $result->getDuplicates()) {
+            $io->section('Duplicate declarations found');
+            $io->table(array_keys($dupes[0]), $dupes);
         }
     }
 

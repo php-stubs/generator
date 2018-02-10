@@ -63,7 +63,7 @@ class Result implements IteratorAggregate
             }
         }
 
-        usort($dupes, function ($a, $b) {
+        usort($dupes, function (array $a, array $b): int {
             return $a['type'] <=> $b['type'] ?: $a['name'] <=> $b['name'];
         });
 

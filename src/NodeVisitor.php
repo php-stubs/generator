@@ -43,6 +43,8 @@ class NodeVisitor extends NodeVisitorAbstract
     private $namespaces = [];
     /** @var Namespace_ */
     private $globalNamespace;
+    /** @var Node[] */
+    private $globalExpressions = [];
 
     /**
      * @var int[][]
@@ -156,7 +158,7 @@ class NodeVisitor extends NodeVisitorAbstract
                 // If we're here, `$parent` is a namespace.  Let's just keep the
                 // `$node` around in `$parent->stmts`.
                 return;
-            } else {
+            } elseif ($node instanceof Stmt) {
                 // Anything other than a namespace which doesn't have a parent
                 // node must belong in the global namespace. We can still remove
                 // the `$node` from the current list of statements since we're
@@ -164,6 +166,8 @@ class NodeVisitor extends NodeVisitorAbstract
                 // HACK: technically only statements should be added.
                 // assert($node instanceof Stmt, 'Only statements should be added to the top-level namespace.');
                 $this->globalNamespace->stmts[] = $node;
+            } else {
+                $this->globalExpressions[] = $node;
             }
         }
 
@@ -173,16 +177,18 @@ class NodeVisitor extends NodeVisitorAbstract
 
     public function getStubStmts(): array
     {
-        if (!$this->globalNamespace->stmts) {
-            return $this->namespaces;
-        } elseif (!$this->namespaces) {
-            return $this->globalNamespace->stmts;
-        } else {
+        if ($this->namespaces) {
             return array_merge(
                 $this->namespaces,
-                [$this->globalNamespace]
+                $this->globalNamespace->stmts ? [$this->globalNamespace] : [],
+                $this->globalExpressions
             );
         }
+
+        return array_merge(
+            $this->globalNamespace->stmts,
+            $this->globalExpressions
+        );
     }
 
     public function getCounts(): array

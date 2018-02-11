@@ -7,6 +7,11 @@ use PhpParser\ParserFactory;
 use RuntimeException;
 use Symfony\Component\Finder\Finder;
 
+/**
+ * Given a collection of PHP files, this class extracts function, class,
+ * interface, trait, and variable declarations, allowing them to be operated on
+ * or pretty-printed.
+ */
 class StubsGenerator
 {
     /**
@@ -59,7 +64,6 @@ class StubsGenerator
      * @var int
      */
     public const GLOBALS = self::DOCUMENTED_GLOBALS | self::UNDOCUMENTED_GLOBALS;
-
 
     /**
      * The default set of symbol types.

@@ -5,6 +5,10 @@ use ArrayIterator;
 use IteratorAggregate;
 use PhpParser\PrettyPrinterAbstract;
 
+/**
+ * Contains the results of stub generation, including the stubs themselves as
+ * well as some metadata.
+ */
 class Result implements IteratorAggregate
 {
     /** @var NodeVisitor */
@@ -34,7 +38,8 @@ class Result implements IteratorAggregate
     }
 
     /**
-     * Returns the list of stub statements.
+     * Returns the list of stub statements, which can be pretty-printed or
+     * operated on further.
      *
      * @return \PhpParser\Node[]
      */
@@ -43,11 +48,29 @@ class Result implements IteratorAggregate
         return $this->visitor->getStubStmts();
     }
 
+    /**
+     * Returns a map of symbol type to count of unique symbols of that type
+     * which are included in the stubs.
+     *
+     * Psalm doesn't seem to parse this correctly.
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
+     *
+     * @return int[]
+     * @psalm-return array<string, int>
+     */
     public function getStats(): array
     {
         return array_map('count', $this->visitor->getCounts());
     }
 
+    /**
+     * Returns a list which includes any symbols for which more than one
+     * declaration was found during stub generation.
+     *
+     * @return (string|int)[][]
+     * @psalm-return array<array{ type: string, name: string, count: int }>
+     */
     public function getDuplicates(): array
     {
         $dupes = [];

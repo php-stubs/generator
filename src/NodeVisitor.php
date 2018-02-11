@@ -18,6 +18,12 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
+/**
+ * On node traversal, this visitor converts any AST to one just containing stub
+ * definitions, removing anything uninteresting.
+ *
+ * @internal
+ */
 class NodeVisitor extends NodeVisitorAbstract
 {
     /** @var bool */
@@ -58,6 +64,9 @@ class NodeVisitor extends NodeVisitorAbstract
         'globals' => [],
     ];
 
+    /**
+     * @param int $symbols Set of symbol types to include stubs for.
+     */
     public function __construct(int $symbols = StubsGenerator::DEFAULT)
     {
         $this->needsFunctions = $symbols & StubsGenerator::FUNCTIONS;
@@ -183,6 +192,11 @@ class NodeVisitor extends NodeVisitorAbstract
         return NodeTraverser::REMOVE_NODE;
     }
 
+    /**
+     * Returns the stored set of stub nodes which are built up during traversal.
+     *
+     * @return Node[]
+     */
     public function getStubStmts(): array
     {
         if ($this->namespaces) {
@@ -199,6 +213,13 @@ class NodeVisitor extends NodeVisitorAbstract
         );
     }
 
+    /**
+     * Returns the counts of all symbols included in the stubs, grouped by type.
+     *
+     * These counts are built up during traveral.
+     *
+     * @psalm-return array<string, array<string, int>>
+     */
     public function getCounts(): array
     {
         return $this->counts;

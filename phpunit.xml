@@ -1,0 +1,19 @@
+<!--bootstrap="tests/bootstrap.php" -->
+<phpunit
+	backupGlobals="false"
+	beStrictAboutChangesToGlobalState="true"
+	beStrictAboutCoversAnnotation="true"
+	beStrictAboutOutputDuringTests="true"
+	beStrictAboutTestSize="true"
+	beStrictAboutTestsThatDoNotTestAnything="true"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+>
+    <testsuites>
+        <testsuite name="Stub Generator Tests">
+            <directory>test</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -102,14 +102,14 @@ class NodeVisitor extends NodeVisitorAbstract
             // Since we don't parse any the bodies of any statements which can
             // hold variable assignments---other than namespaces---we know these
             // assigns are for globals.  Check if we are assigning to `$GLOBALS`
-            // with a simple string.  If so, convert it to a normal variable
-            // assignment.
+            // with a simple string that's a valid variable identifier.  If so,
+            // convert it to a normal variable assignment.
             if (count($this->stack) === 1
                 && $node->var instanceof ArrayDimFetch
                 && $node->var->var instanceof Variable
                 && $node->var->var->name === 'GLOBALS'
                 && $node->var->dim instanceof String_
-                && preg_match('/[a-zA-Z_]+[a-zA-Z0-9_]*/', $node->var->dim->value)
+                && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $node->var->dim->value)
             ) {
                 $node->var = new Variable($node->var->dim->value);
             }
@@ -124,6 +124,11 @@ class NodeVisitor extends NodeVisitorAbstract
                 || ($first instanceof Interface_ && !interface_exists($first->name))
                 || ($first instanceof Trait_ && !trait_exists($first->name))
             )) {
+                // Nested class methods traversed, but this won't be.
+                if ($first instanceof Function_ && $first->stmts) {
+                    $first->stmts = [];
+                }
+
                 return $first;
             }
         }
@@ -153,7 +158,9 @@ class NodeVisitor extends NodeVisitorAbstract
             return;
         }
 
-        if ($this->needsNode($node)) {
+        $namespaceName = ($parent && $parent->name) ? $parent->name->toString() : '';
+
+        if ($this->needsNode($node, $namespaceName)) {
             if ($parent) {
                 // If we're here, `$parent` is a namespace.  Let's just keep the
                 // `$node` around in `$parent->stmts`.
@@ -163,10 +170,11 @@ class NodeVisitor extends NodeVisitorAbstract
                 // node must belong in the global namespace. We can still remove
                 // the `$node` from the current list of statements since we're
                 // stashing it for later no matter what.
-                // HACK: technically only statements should be added.
-                // assert($node instanceof Stmt, 'Only statements should be added to the top-level namespace.');
                 $this->globalNamespace->stmts[] = $node;
             } else {
+                // Technically only statements should be added to the global
+                // namespace; that said, these will be bundled in with the
+                // global namespace when the code is generated anyway.
                 $this->globalExpressions[] = $node;
             }
         }
@@ -200,25 +208,26 @@ class NodeVisitor extends NodeVisitorAbstract
      * Determines if we should keep the given `$node` in `$this->leaveNode()`.
      *
      * @param Node $node
+     * @param string $namespace The namespace we're in.
      *
      * @return bool
      */
-    private function needsNode(Node $node): bool
+    private function needsNode(Node $node, string $namespace): bool
     {
         if ($node instanceof Function_) {
-            return $this->needsFunctions && $this->count('functions', $node->name);
+            return $this->needsFunctions && $this->count('functions', "{$namespace}\\{$node->name}");
         }
 
         if ($node instanceof Class_) {
-            return $this->needsClasses && $this->count('classes', $node->name);
+            return $this->needsClasses && $this->count('classes', "{$namespace}\\{$node->name}");
         }
 
         if ($node instanceof Interface_) {
-            return $this->needsInterfaces && $this->count('interfaces', $node->name);
+            return $this->needsInterfaces && $this->count('interfaces', "{$namespace}\\{$node->name}");
         }
 
         if ($node instanceof Trait_) {
-            return $this->needsTraits && $this->count('traits', $node->name);
+            return $this->needsTraits && $this->count('traits', "{$namespace}\\{$node->name}");
         }
 
         if (($this->needsDocumentedGlobals || $this->needsUndocumentedGlobals)

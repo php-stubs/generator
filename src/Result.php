@@ -56,7 +56,7 @@ class Result implements IteratorAggregate
                 if ($count > 1) {
                     $dupes[] = [
                         'type' => $type,
-                        'name' => $name,
+                        'name' => $type === 'globals' ? '$' . $name : ltrim($name, '\\'),
                         'count' => $count,
                     ];
                 }

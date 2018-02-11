@@ -5,6 +5,7 @@ use ArrayIterator;
 use PhpParser\PrettyPrinter\Standard;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -50,10 +51,12 @@ class GenerateStubsCommand extends Command
 
     public function configure(): void
     {
-        $this->setName('run')
-            ->setDescription('Generates stubs for the PHP files in the given sources')
-            ->addArgument('sources', InputArgument::IS_ARRAY | InputArgument::REQUIRED, 'The sources from which to generate stubs.  Either directories or specific files.  At least one must be specified.')
-            ->addOption('out', null, InputOption::VALUE_OPTIONAL, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.')
+        $this->setName('generate-stubs')
+            ->setDescription('Generates stubs for the PHP files in the given sources.')
+            ->addArgument('sources', InputArgument::IS_ARRAY, 'The sources from which to generate stubs.  Either directories or specific files.  At least one must be specified, unless --finder is specified.')
+            ->addOption('out', null, InputOption::VALUE_REQUIRED, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.')
+            ->addOption('force', null, InputOption::VALUE_NONE, 'Whether to force an overwrite.')
+            ->addOption('finder', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `Symfony\Finder` instance including the set of files that should be parsed.  Can be used instead of, but not in addition to, passing sources directly.')
             ->addOption('stats', null, InputOption::VALUE_NONE, 'Whether to print stats instead of outputting stubs.  Stats will always be printed if --out is provided.');
 
         foreach (self::SYMBOL_OPTIONS as $opt) {
@@ -75,9 +78,9 @@ class GenerateStubsCommand extends Command
                 throw new InvalidArgumentException("Bad --out: '{$this->outFile}' is a directory, please pass a file.");
             }
 
-
             $io = new SymfonyStyle($input, $output);
-            if (!$io->confirm("The file '{$this->outFile}' already exists.  Overwrite?", false)) {
+            $message = "The file '{$this->outFile}' already exists.  Overwrite?";
+            if (!$input->getOption('force') && !$io->confirm($message, false)) {
                 exit(1);
             }
 
@@ -107,7 +110,7 @@ class GenerateStubsCommand extends Command
             $io->success("Stubs written to {$this->outFile}");
 
             $this->printStats($io, $result);
-        } elseif ($input->hasOption('stats')) {
+        } elseif ($input->getOption('stats')) {
             $io->title('PHP Stubs Generator: Stats');
 
             $this->printStats($io, $result);
@@ -152,14 +155,33 @@ class GenerateStubsCommand extends Command
      */
     private function parseSources(InputInterface $input): Finder
     {
-        $finder = Finder::create();
+        if ($finderPath = $input->getOption('finder')) {
+            $finderPath = $this->resolvePath($finderPath);
+            if (!$this->filesystem->exists($finderPath) || is_dir($finderPath)) {
+                throw new InvalidArgumentException("Bad --finder path: '$finderPath' does not exist or is a directory.");
+            }
+            try {
+                $finder = @include $finderPath;
+            } catch (Exception $e) {
+                throw new RuntimeException("Could not resolve a `Symfony\Finder` from '$finderPath'.", 0, $e);
+            }
+            if (!$finder || !($finder instanceof Finder)) {
+                throw new RuntimeException("Could not resolve a `Symfony\Finder` from '$finderPath'.");
+            }
+            return $finder;
+        }
 
         $sources = $input->getArgument('sources');
+        if (!$sources) {
+            throw new RuntimeException('Not enough arguments.  Missing either <sources> or --finder.');
+        }
+
+        $finder = Finder::create();
         $singleFiles = [];
         foreach ($sources as $source) {
             $source = $this->resolvePath($source);
             if (!$this->filesystem->exists($source)) {
-                throw new InvalidArgumentException("Bad path: '$source' does not exist.");
+                throw new InvalidArgumentException("Bad source path: '$source' does not exist.");
             }
             if (is_dir($source)) {
                 $finder->in($source);

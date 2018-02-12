@@ -1,6 +1,6 @@
 {
     "name": "giacocorsiglia/stubs-generator",
-    "description": "Generate stubs from a library for IDE completion and static analysis.",
+    "description": "Generate stubs from any PHP code for IDE completion and static analysis.",
     "type": "library",
     "autoload": {
         "psr-4": {

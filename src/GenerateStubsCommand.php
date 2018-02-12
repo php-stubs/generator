@@ -2,6 +2,7 @@
 namespace StubsGenerator;
 
 use ArrayIterator;
+use Exception;
 use PhpParser\PrettyPrinter\Standard;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;

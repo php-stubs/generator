@@ -57,6 +57,7 @@ class GenerateStubsCommand extends Command
             ->addOption('out', null, InputOption::VALUE_REQUIRED, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Whether to force an overwrite.')
             ->addOption('finder', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `Symfony\Finder` instance including the set of files that should be parsed.  Can be used instead of, but not in addition to, passing sources directly.')
+            ->addOption('header', null, InputOption::VALUE_REQUIRED, 'A doc comment to prepend to the top of the generated stubs file.  (Will be added below the opening `<?php` tag.)', '')
             ->addOption('stats', null, InputOption::VALUE_NONE, 'Whether to print stats instead of outputting stubs.  Stats will always be printed if --out is provided.');
 
         foreach (self::SYMBOL_OPTIONS as $opt) {
@@ -98,11 +99,18 @@ class GenerateStubsCommand extends Command
         $result = $generator->generate($finder);
 
         $printer = new Standard();
+
+        if ($header = $input->getOption('header')) {
+            $header = "\n$header";
+        }
+        // 5 === strlen('<?php')
+        $prettyPrinted = substr_replace($result->prettyPrint($printer), "<?php{$header}", 0, 5);
+
         if ($this->outFile) {
             $io->title('PHP Stubs Generator');
 
             if ($this->confirmedOverwrite || !$this->filesystem->exists($this->outFile)) {
-                $this->filesystem->dumpFile($this->outFile, $result->prettyPrint($printer));
+                $this->filesystem->dumpFile($this->outFile, $prettyPrinted);
             } else {
                 throw new InvalidArgumentException("Cannot write to '{$this->outFile}'.");
             }
@@ -115,7 +123,7 @@ class GenerateStubsCommand extends Command
 
             $this->printStats($io, $result);
         } else {
-            $output->writeln($result->prettyPrint($printer));
+            $output->writeln($prettyPrinted);
         }
     }
 

@@ -2,7 +2,18 @@
     "name": "giacocorsiglia/stubs-generator",
     "description": "Generate stubs from any PHP code for IDE completion and static analysis.",
     "type": "library",
-    "version": "0.1",
+    "license": "MIT",
+    "keywords": [
+        "IDE",
+        "static analysis"
+    ],
+    "homepage": "https://github.com/GiacoCorsiglia/php-stubs-generator",
+    "authors": [
+        {
+            "name": "Giaco Corsiglia",
+            "email": "GiacoCorsiglia@gmail.com"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "StubsGenerator\\": "src"
@@ -23,12 +34,5 @@
         "phpunit/phpunit": "^7.0",
         "friendsofphp/php-cs-fixer": "^2.10"
     },
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Giaco Corsiglia",
-            "email": "GiacoCorsiglia@gmail.com"
-        }
-    ],
     "minimum-stability": "stable"
 }

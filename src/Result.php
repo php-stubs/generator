@@ -3,6 +3,7 @@ namespace StubsGenerator;
 
 use ArrayIterator;
 use IteratorAggregate;
+use PhpParser\PrettyPrinter\Standard;
 use PhpParser\PrettyPrinterAbstract;
 
 /**
@@ -96,12 +97,18 @@ class Result implements IteratorAggregate
     /**
      * Shortcut to pretty print all the stubs as one file.
      *
-     * @param PrettyPrinterAbstract $printer Pretty printer instance to use.
+     * If no `$printer` is provided, a `\PhpParser\PrettyPrinter\Standard` will
+     * be used.
+     *
+     * @param PrettyPrinterAbstract|null $printer Pretty printer instance.
      *
      * @return string The pretty printed version.
      */
-    public function prettyPrint(PrettyPrinterAbstract $printer): string
+    public function prettyPrint(PrettyPrinterAbstract $printer = null): string
     {
+        if (!$printer) {
+            $printer = new Standard();
+        }
         return $printer->prettyPrintFile($this->getStubStmts());
     }
 }

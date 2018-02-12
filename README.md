@@ -8,6 +8,68 @@ The generator is based on nikic's [PHP-Parser](https://github.com/nikic/PHP-Pars
 
 Contributions in the form of issue reports or Pull Requests are welcome!
 
+## Example
+
+The idea is to turn this:
+
+```php
+// source-file-1.php
+/**
+ * @param string $bar
+ * @return int
+ */
+function foo($bar)
+{
+    return (int) $bar;
+}
+
+/** @var string */
+$something = '123abc';
+
+if ($something) {
+    echo foo($something);
+}
+
+// source-file-2.php
+namespace MyNamespace;
+
+class MyClass extends MyParentClass
+{
+    public function method(): string
+    {
+        return '';
+    }
+}
+```
+
+Into this:
+
+```php
+// stubs.php
+namespace {
+    /**
+     * @param string $bar
+     * @return int
+     */
+    function foo($bar)
+    {
+    }
+
+    /** @var string */
+    $something = '123abc';
+}
+
+namespace MyNamespace {
+    class MyClass extends MyParentClass
+    {
+        public function method(): string
+        {
+        }
+    }
+}
+```
+
+
 ## Command Line Usage
 
 To install:
@@ -98,6 +160,7 @@ The set of symbol types are:
 
 ## TODO
 
+- Preserve `use` statements in namespaces, or make sure references are fully qualified.
 - Add support for constants declared with `const`.
 - Add support for constants declared with `define()`.
     - Consider parsing function and method bodies for these declarations.

@@ -8,6 +8,9 @@
             "StubsGenerator\\": "src"
         }
     },
+    "bin": [
+        "bin/generate-stubs"
+    ],
     "require": {
         "php": ">=7.1",
         "symfony/console": "^4.0",

@@ -13,4 +13,4 @@ install: composer install
 
 script:
   - vendor/bin/phpunit
-  - vendor/bin/psalm --find-dead-code
+  - vendor/bin/psalm

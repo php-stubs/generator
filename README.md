@@ -54,19 +54,19 @@ use StubsGenerator\{StubsGenerator, Finder};
 // First, instantiate a `StubsGenerator\StubsGenerator`.
 $generator = new StubsGenerator();
 
-// Then, create a `StubsGenerator\Finder` which contains the set of
-// files you wish to generate stubs for.
+// Then, create a `StubsGenerator\Finder` which contains
+// the set of files you wish to generate stubs for.
 $finder = Finder::create()->in('/path/to/my-library/');
 
-// Now you may use the `StubsGenerator::generate()` method, which will
-// return a `StubsGenerator\Result` instance.
+// Now you may use the `StubsGenerator::generate()` method,
+// which will return a `StubsGenerator\Result` instance.
 $result = $generator->generate($finder);
 
 // You can use the `Result` instance to pretty-print the stubs.
 echo $result->prettyPrint();
 
-// You can also use it to retrieve the PHP-Parser nodes that represent
-// the generated stub declarations.
+// You can also use it to retrieve the PHP-Parser nodes
+// that represent the generated stub declarations.
 $stmts = $result->getStubStmts();
 ```
 
@@ -74,7 +74,7 @@ $stmts = $result->getStubStmts();
 
 You can restrict the set of symbol types for which stubs are generated:
 
-```
+```php
 // This will only generate stubs for function declarations.
 $generator = new StubsGenerator(StubsGenerator::FUNCTIONS);
 

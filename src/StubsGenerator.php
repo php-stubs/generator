@@ -3,6 +3,7 @@ namespace StubsGenerator;
 
 use PhpParser\Error;
 use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use RuntimeException;
 use Symfony\Component\Finder\Finder;
@@ -104,6 +105,7 @@ class StubsGenerator
 
         $traverser = new NodeTraverser();
         $visitor = new NodeVisitor($this->symbols);
+        $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor($visitor);
 
         $unparsed = [];

@@ -1,6 +1,6 @@
 <?php
 /** doc */
-abstract class A extends B implements C
+abstract class A extends \B implements \C
 {
     /** doc */
     protected const A = 'B';

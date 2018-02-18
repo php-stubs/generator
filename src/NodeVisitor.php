@@ -52,6 +52,9 @@ class NodeVisitor extends NodeVisitorAbstract
     /** @var Node[] */
     private $globalExpressions = [];
 
+    /** @var bool */
+    private $isInDeclaration = false;
+
     /**
      * @var int[][]
      * @psalm-var array<string, array<string, int>>
@@ -88,25 +91,31 @@ class NodeVisitor extends NodeVisitorAbstract
     {
         $this->stack[] = $node;
 
-        // These are the only nodes we need to parse the children of, unless in
-        // the future we wish to parse function or method bodies for constant or
-        // global declarations.  Also, no reason to bother traversing the
-        // children of declarations which we won't include anyway.
-        if ($node instanceof Namespace_
-            || ($this->needsClasses && $node instanceof Class_)
-            || ($this->needsInterfaces && $node instanceof Interface_)
-            || ($this->needsTraits && $node instanceof Trait_)
-        ) {
+        if ($node instanceof Namespace_) {
+            // We always need to parse the children of namespaces.
             return;
         }
 
-        if ($node instanceof Function_ || $node instanceof ClassMethod) {
+        if (($this->needsClasses && $node instanceof Class_)
+            || ($this->needsInterfaces && $node instanceof Interface_)
+            || ($this->needsTraits && $node instanceof Trait_)
+        ) {
+            // We'll need to parse all descendents of these nodes (if we plan to
+            // include them in the stubs at all) so we get method, property, and
+            // constant declarations.
+            $this->isInDeclaration = true;
+        } elseif ($node instanceof Function_ || $node instanceof ClassMethod) {
             // We can just delete function or method bodies for our stubs.  In
             // the future we may want to parse them for constant definitions or
             // the like.
             if ($node->stmts) {
                 $node->stmts = [];
             }
+            // We need to parse all the (non-statement) descendents of these
+            // nodes so that constant or class references in the function
+            // signatures are fully qualified by the `NameResolver` visitor.
+            // (This will already be `true` if it's a ClassMethod.)
+            $this->isInDeclaration = true;
         } elseif ($node instanceof Assign) {
             // Since we don't parse any the bodies of any statements which can
             // hold variable assignments---other than namespaces---we know these
@@ -122,6 +131,8 @@ class NodeVisitor extends NodeVisitorAbstract
             ) {
                 $node->var = new Variable($node->var->dim->value);
             }
+            // Ensure that class or constant references are fully qualified.
+            $this->isInDeclaration = true;
         } elseif ($node instanceof If_) {
             // Unwrap simple conditional declarations, but only if the wrapped
             // declaration won't redefine something we already have in this
@@ -142,13 +153,26 @@ class NodeVisitor extends NodeVisitorAbstract
             }
         }
 
-        return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+        if (!$this->isInDeclaration) {
+            // Don't bother parsing descendents of uninteresting nodes.
+            return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+        }
     }
 
     public function leaveNode(Node $node)
     {
         array_pop($this->stack);
         $parent = $this->stack[count($this->stack) - 1] ?? null;
+
+        if ($node instanceof Assign
+            || $node instanceof Function_
+            || $node instanceof Class_
+            || $node instanceof Interface_
+            || $node instanceof Trait_
+        ) {
+            // We're leaving one of these.
+            $this->isInDeclaration = false;
+        }
 
         if ($node instanceof Namespace_) {
             $this->namespaces[] = $node;

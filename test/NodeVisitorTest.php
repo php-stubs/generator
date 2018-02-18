@@ -5,6 +5,7 @@ use Exception;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
+use PhpParser\NodeVisitor\NameResolver;
 use PHPUnit\Framework\TestCase;
 
 class NodeVisitorTest extends TestCase
@@ -14,6 +15,7 @@ class NodeVisitorTest extends TestCase
         $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
 
         $traverser = new NodeTraverser();
+        $traverser->addVisitor(new NameResolver());
         $visitor = new NodeVisitor($symbols);
         $traverser->addVisitor($visitor);
 

@@ -160,7 +160,6 @@ The set of symbol types are:
 
 ## TODO
 
-- Preserve `use` statements in namespaces, or make sure references are fully qualified.
 - Add support for constants declared with `const`.
 - Add support for constants declared with `define()`.
     - Consider parsing function and method bodies for these declarations.

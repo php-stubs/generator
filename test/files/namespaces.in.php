@@ -1,7 +1,17 @@
 <?php
 namespace A {
-    class A
+    use B\B as C;
+    use D;
+
+    class A extends C implements D
     {
+        const A = C::A * 5;
+        const B = GLOBAL_FALLBACK;
+        const C = \GLOBAL_EXPLICIT;
+
+        public function a($a = C::A): C
+        {
+        }
     }
 
     function a()
@@ -10,8 +20,14 @@ namespace A {
     }
 }
 namespace {
-    class A
+    use D\D;
+    use const B\B;
+
+    class A extends C implements D
     {
+        const A = B;
+        const B = GLOBAL_FALLBACK;
+        const C = \GLOBAL_EXPLICIT;
     }
 
     function a()

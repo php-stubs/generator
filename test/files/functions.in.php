@@ -12,4 +12,10 @@ if (!function_exists('b')) {
     {
         return '';
     }
+
+    /** doc */
+    function c(string $c): string
+    {
+        return '';
+    }
 }

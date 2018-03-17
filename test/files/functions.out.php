@@ -8,3 +8,8 @@ function a(string $a): string
 function b(string $b): string
 {
 }
+
+/** doc */
+function c(string $c): string
+{
+}

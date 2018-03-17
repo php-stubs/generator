@@ -63,6 +63,8 @@ class NodeVisitor extends NodeVisitorAbstract
 
     /** @var bool */
     private $isInDeclaration = false;
+    /** @var bool */
+    private $isInIf = false;
 
     /**
      * @var int[][]
@@ -143,22 +145,11 @@ class NodeVisitor extends NodeVisitorAbstract
             // Ensure that class or constant references are fully qualified.
             $this->isInDeclaration = true;
         } elseif ($node instanceof If_) {
-            // Unwrap simple conditional declarations, but only if the wrapped
-            // declaration won't redefine something we already have in this
-            // version of PHP.  That is, ignore old polyfill declarations.
-            $first = $node->stmts[0] ?? null;
-            if ($first && (
-                ($first instanceof Function_ && !function_exists($first->name))
-                || ($first instanceof Class_ && !class_exists($first->name))
-                || ($first instanceof Interface_ && !interface_exists($first->name))
-                || ($first instanceof Trait_ && !trait_exists($first->name))
-            )) {
-                // Nested class methods traversed, but this won't be.
-                if ($first instanceof Function_ && $first->stmts) {
-                    $first->stmts = [];
-                }
-
-                return $first;
+            if (!$this->isInIf) {
+                // We'll examine the first level inside of an if statement to
+                // look for function/class/etc. declarations.
+                $this->isInIf = true;
+                return; // Traverse children.
             }
         }
 
@@ -168,9 +159,11 @@ class NodeVisitor extends NodeVisitorAbstract
         }
     }
 
-    public function leaveNode(Node $node)
+    public function leaveNode(Node $node, bool $preserveStack = false)
     {
-        array_pop($this->stack);
+        if (!$preserveStack) {
+            array_pop($this->stack);
+        }
         $parent = $this->stack[count($this->stack) - 1] ?? null;
 
         if ($node instanceof Assign
@@ -181,6 +174,21 @@ class NodeVisitor extends NodeVisitorAbstract
         ) {
             // We're leaving one of these.
             $this->isInDeclaration = false;
+        }
+
+        if ($node instanceof If_) {
+            // Replace the if statement with its set of children, but only those
+            // that we want.  Have to manually call leaveNode on each; it won't
+            // be called automatically..
+            $stmts = [];
+            foreach ($node->stmts as $stmt) {
+                if ($this->leaveNode($stmt, true) !== NodeTraverser::REMOVE_NODE) {
+                    $stmt = $stmt;
+                }
+            }
+            // We're leaving it.
+            $this->isInIf = false;
+            return $stmts;
         }
 
         if ($node instanceof Namespace_) {
@@ -289,23 +297,34 @@ class NodeVisitor extends NodeVisitorAbstract
      */
     private function needsNode(Node $node, string $namespace): bool
     {
+        $fullyQualifiedName = isset($node->name) ? '\\' . ltrim("{$namespace}\\{$node->name}", '\\') : '';
+
         if ($node instanceof Function_) {
-            return $this->needsFunctions && $this->count('functions', "{$namespace}\\{$node->name}");
+            return $this->needsFunctions
+                && $this->count('functions', $fullyQualifiedName)
+                && !function_exists($fullyQualifiedName);
         }
 
         if ($node instanceof Class_) {
-            return $this->needsClasses && $this->count('classes', "{$namespace}\\{$node->name}");
+            return $this->needsClasses
+                && $this->count('classes', $fullyQualifiedName)
+                && !class_exists($fullyQualifiedName);
         }
 
         if ($node instanceof Interface_) {
-            return $this->needsInterfaces && $this->count('interfaces', "{$namespace}\\{$node->name}");
+            return $this->needsInterfaces
+                && $this->count('interfaces', $fullyQualifiedName)
+                && !interface_exists($fullyQualifiedName);
         }
 
         if ($node instanceof Trait_) {
-            return $this->needsTraits && $this->count('traits', "{$namespace}\\{$node->name}");
+            return $this->needsTraits
+                && $this->count('traits', $fullyQualifiedName)
+                && !trait_exists($fullyQualifiedName);
         }
 
         if (($this->needsDocumentedGlobals || $this->needsUndocumentedGlobals)
+            && !$this->isInIf // Don't keep conditionally declared globals.
             && $node instanceof Assign
             && $node->var instanceof Variable
             && is_string($node->var->name)

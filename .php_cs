@@ -41,7 +41,7 @@ return PhpCsFixer\Config::create()
         'phpdoc_trim' => true,
         'phpdoc_types' => true,
         'phpdoc_var_without_name' => true,
-        'self_accessor' => true,
+        'self_accessor' => false,
         'semicolon_after_instruction' => true,
         'short_scalar_cast' => true,
         'single_quote' => true,

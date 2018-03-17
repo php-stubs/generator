@@ -297,7 +297,9 @@ class NodeVisitor extends NodeVisitorAbstract
      */
     private function needsNode(Node $node, string $namespace): bool
     {
-        $fullyQualifiedName = isset($node->name) ? '\\' . ltrim("{$namespace}\\{$node->name}", '\\') : '';
+        $fullyQualifiedName = ($node instanceof Function_ || $node instanceof ClassLike)
+            ? '\\' . ltrim("{$namespace}\\{$node->name}", '\\')
+            : '';
 
         if ($node instanceof Function_) {
             return $this->needsFunctions
@@ -421,13 +423,15 @@ class NodeVisitor extends NodeVisitorAbstract
      * Merges the statements of each namespace into one array.
      *
      * @param Namespace_[] $namespaces
-     * @return Node[]
+     * @return Stmt[]
      */
     private function reduceStmts(array $namespaces): array
     {
         $stmts = [];
         foreach ($namespaces as $namespace) {
-            array_push($stmts, ...$namespace->stmts);
+            foreach ($namespace->stmts as $stmt) {
+                $stmts[] = $stmt;
+            }
         }
         return $stmts;
     }

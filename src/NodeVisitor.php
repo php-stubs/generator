@@ -211,7 +211,7 @@ class NodeVisitor extends NodeVisitorAbstract
                 }
             } elseif ($parent) {
                 // If we're here, `$parent` is a namespace.  Let's just keep the
-                // `$node` around in `$parent->stmts`.  Function definitions.
+                // `$node` around in `$parent->stmts`.
                 return; // Don't remove.
             } elseif ($node instanceof Stmt) {
                 // Anything other than a namespace which doesn't have a parent

@@ -3,9 +3,9 @@ namespace StubsGenerator;
 
 use Exception;
 use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
-use PhpParser\NodeVisitor\NameResolver;
 use PHPUnit\Framework\TestCase;
 
 class NodeVisitorTest extends TestCase
@@ -35,6 +35,8 @@ class NodeVisitorTest extends TestCase
     {
         $cases = [
             'classes',
+            'classes-with-dependencies',
+            'circular-dependency',
             'functions',
             ['globals', 'globals.all'],
             ['globals', 'globals.doc', StubsGenerator::DOCUMENTED_GLOBALS],

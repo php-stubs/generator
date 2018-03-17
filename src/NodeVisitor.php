@@ -9,6 +9,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
@@ -51,6 +52,14 @@ class NodeVisitor extends NodeVisitorAbstract
     private $globalNamespace;
     /** @var Node[] */
     private $globalExpressions = [];
+    /** @var ClassLikeWithDependencies[] */
+    private $classLikes = [];
+    /** @var true[] */
+    private $resolvedClassLikes = [];
+    /** @var Namespace_[] */
+    private $classLikeNamespaces = [];
+    /** @var Namespace_|null */
+    private $currentClassLikeNamespace = null;
 
     /** @var bool */
     private $isInDeclaration = false;
@@ -194,10 +203,16 @@ class NodeVisitor extends NodeVisitorAbstract
         $namespaceName = ($parent && $parent->name) ? $parent->name->toString() : '';
 
         if ($this->needsNode($node, $namespaceName)) {
-            if ($parent) {
+            if ($node instanceof ClassLike) {
+                // Ignore anonymous classes.
+                if ($node->name) {
+                    $clwd = new ClassLikeWithDependencies($node, $namespaceName);
+                    $this->classLikes[$clwd->fullyQualifiedName] = $clwd;
+                }
+            } elseif ($parent) {
                 // If we're here, `$parent` is a namespace.  Let's just keep the
-                // `$node` around in `$parent->stmts`.
-                return;
+                // `$node` around in `$parent->stmts`.  Function definitions.
+                return; // Don't remove.
             } elseif ($node instanceof Stmt) {
                 // Anything other than a namespace which doesn't have a parent
                 // node must belong in the global namespace. We can still remove
@@ -216,6 +231,14 @@ class NodeVisitor extends NodeVisitorAbstract
         return NodeTraverser::REMOVE_NODE;
     }
 
+    public function afterTraverse(array $nodes)
+    {
+        // Don't keep any empty namespaces.
+        $this->namespaces = array_filter($this->namespaces, function (Namespace_ $ns): bool {
+            return (bool) $ns->stmts;
+        });
+    }
+
     /**
      * Returns the stored set of stub nodes which are built up during traversal.
      *
@@ -223,17 +246,24 @@ class NodeVisitor extends NodeVisitorAbstract
      */
     public function getStubStmts(): array
     {
-        if ($this->namespaces) {
+        foreach ($this->classLikes as $classLike) {
+            $this->resolveClassLike($classLike);
+        }
+
+        if ($this->allAreGlobal($this->namespaces) && $this->allAreGlobal($this->classLikeNamespaces)) {
             return array_merge(
-                $this->namespaces,
-                $this->globalNamespace->stmts ? [$this->globalNamespace] : [],
+                $this->reduceStmts($this->classLikeNamespaces),
+                $this->reduceStmts($this->namespaces),
+                $this->globalNamespace->stmts,
                 $this->globalExpressions
             );
         }
 
         return array_merge(
-            $this->globalNamespace->stmts,
-            $this->globalExpressions
+            $this->classLikeNamespaces,
+            $this->namespaces,
+            $this->globalNamespace->stmts ? [$this->globalNamespace] : [],
+            $this->globalExpressions ? [new Namespace_(null, $this->globalExpressions)] : []
         );
     }
 
@@ -311,5 +341,75 @@ class NodeVisitor extends NodeVisitorAbstract
         }
 
         return ($this->counts[$type][$name] = ($this->counts[$type][$name] ?? 0) + 1) === 1;
+    }
+
+    /**
+     * Populates the `classLikeNamespaces` property with namespaces with classes
+     * declared in a valid order.
+     *
+     * @param ClassLikeWithDependencies $clwd
+     * @return void
+     */
+    private function resolveClassLike(ClassLikeWithDependencies $clwd): void
+    {
+        if (isset($this->resolvedClassLikes[$clwd->fullyQualifiedName])) {
+            // Already resolved.
+            return;
+        }
+        $this->resolvedClassLikes[$clwd->fullyQualifiedName] = true;
+
+        foreach ($clwd->dependencies as $dependencyName) {
+            if (isset($this->classLikes[$dependencyName])) {
+                $this->resolveClassLike($this->classLikes[$dependencyName]);
+            }
+        }
+
+        if (!$this->currentClassLikeNamespace) {
+            $namespaceMatches = false;
+        } elseif ($this->currentClassLikeNamespace->name) {
+            $namespaceMatches = $this->currentClassLikeNamespace->name->toString() === $clwd->namespace;
+        } else {
+            $namespaceMatches = !$clwd->namespace;
+        }
+
+        // Reduntant check to make Psalm happy.
+        if ($this->currentClassLikeNamespace && $namespaceMatches) {
+            $this->currentClassLikeNamespace->stmts[] = $clwd->node;
+        } else {
+            $name = $clwd->namespace ? new Name($clwd->namespace) : null;
+            $this->currentClassLikeNamespace = new Namespace_($name, [$clwd->node]);
+            $this->classLikeNamespaces[] = $this->currentClassLikeNamespace;
+        }
+    }
+
+    /**
+     * Determines if each namespace in the list is a global namespace.
+     *
+     * @param Namespace_[] $namespaces
+     * @return bool
+     */
+    private function allAreGlobal(array $namespaces): bool
+    {
+        foreach ($namespaces as $namespace) {
+            if ($namespace->name && $namespace->name->toString() !== '') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Merges the statements of each namespace into one array.
+     *
+     * @param Namespace_[] $namespaces
+     * @return Node[]
+     */
+    private function reduceStmts(array $namespaces): array
+    {
+        $stmts = [];
+        foreach ($namespaces as $namespace) {
+            array_push($stmts, ...$namespace->stmts);
+        }
+        return $stmts;
     }
 }

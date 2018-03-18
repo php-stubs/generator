@@ -82,13 +82,16 @@ class StubsGenerator
 
     /** @var int */
     private $symbols;
+    /** @var array */
+    private $config;
 
     /**
      * @param int $symbols Bitmask of symbol types to include in the stubs.
      */
-    public function __construct(int $symbols = self::DEFAULT)
+    public function __construct(int $symbols = self::DEFAULT, array $config = [])
     {
         $this->symbols = $symbols;
+        $this->config = $config;
     }
 
     /**
@@ -104,7 +107,7 @@ class StubsGenerator
         $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
 
         $traverser = new NodeTraverser();
-        $visitor = new NodeVisitor($this->symbols);
+        $visitor = new NodeVisitor($this->symbols, $this->config);
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor($visitor);
 

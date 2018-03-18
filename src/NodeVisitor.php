@@ -18,6 +18,7 @@ use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
+use PhpParser\Node\Expr\ConstFetch;
 
 /**
  * On node traversal, this visitor converts any AST to one just containing stub
@@ -39,6 +40,8 @@ class NodeVisitor extends NodeVisitorAbstract
     private $needsDocumentedGlobals;
     /** @var bool */
     private $needsUndocumentedGlobals;
+    /** @var */
+    private $nullifyGlobals;
 
     /**
      * @psalm-suppress PropertyNotSetInConstructor
@@ -81,7 +84,7 @@ class NodeVisitor extends NodeVisitorAbstract
     /**
      * @param int $symbols Set of symbol types to include stubs for.
      */
-    public function __construct(int $symbols = StubsGenerator::DEFAULT)
+    public function __construct(int $symbols = StubsGenerator::DEFAULT, array $config = [])
     {
         $this->needsFunctions = $symbols & StubsGenerator::FUNCTIONS;
         $this->needsClasses = $symbols & StubsGenerator::CLASSES;
@@ -89,6 +92,8 @@ class NodeVisitor extends NodeVisitorAbstract
         $this->needsInterfaces = $symbols & StubsGenerator::INTERFACES;
         $this->needsDocumentedGlobals = $symbols & StubsGenerator::DOCUMENTED_GLOBALS;
         $this->needsUndocumentedGlobals = $symbols & StubsGenerator::UNDOCUMENTED_GLOBALS;
+
+        $this->nullifyGlobals = !empty($config['nullify_globals']);
 
         $this->globalNamespace = new Namespace_();
     }
@@ -144,6 +149,9 @@ class NodeVisitor extends NodeVisitorAbstract
             }
             // Ensure that class or constant references are fully qualified.
             $this->isInDeclaration = true;
+            if ($this->nullifyGlobals) {
+                $node->expr = new ConstFetch(new Name('null'));
+            }
         } elseif ($node instanceof If_) {
             if (!$this->isInIf) {
                 // We'll examine the first level inside of an if statement to

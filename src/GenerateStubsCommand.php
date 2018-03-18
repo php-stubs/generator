@@ -59,6 +59,7 @@ class GenerateStubsCommand extends Command
             ->addOption('force', null, InputOption::VALUE_NONE, 'Whether to force an overwrite.')
             ->addOption('finder', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `Symfony\Finder` instance including the set of files that should be parsed.  Can be used instead of, but not in addition to, passing sources directly.')
             ->addOption('header', null, InputOption::VALUE_REQUIRED, 'A doc comment to prepend to the top of the generated stubs file.  (Will be added below the opening `<?php` tag.)', '')
+            ->addOption('nullify-globals', null, InputOption::VALUE_NONE, 'Initialize all global variables with a value of `null`, instead of their assigned value.')
             ->addOption('stats', null, InputOption::VALUE_NONE, 'Whether to print stats instead of outputting stubs.  Stats will always be printed if --out is provided.');
 
         foreach (self::SYMBOL_OPTIONS as $opt) {
@@ -95,7 +96,9 @@ class GenerateStubsCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $finder = $this->parseSources($input);
-        $generator = new StubsGenerator($this->parseSymbols($input));
+        $generator = new StubsGenerator($this->parseSymbols($input), [
+            'nullify_globals' => $input->getOption('nullify-globals'),
+        ]);
 
         $result = $generator->generate($finder);
 

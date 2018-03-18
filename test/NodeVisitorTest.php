@@ -10,13 +10,13 @@ use PHPUnit\Framework\TestCase;
 
 class NodeVisitorTest extends TestCase
 {
-    private function parse(string $php, int $symbols): NodeVisitor
+    private function parse(string $php, int $symbols, array $config): NodeVisitor
     {
         $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
-        $visitor = new NodeVisitor($symbols);
+        $visitor = new NodeVisitor($symbols, $config);
         $traverser->addVisitor($visitor);
 
         $stmts = $parser->parse($php);
@@ -41,6 +41,7 @@ class NodeVisitorTest extends TestCase
             ['globals', 'globals.all'],
             ['globals', 'globals.doc', StubsGenerator::DOCUMENTED_GLOBALS],
             ['globals', 'globals.no-doc', StubsGenerator::UNDOCUMENTED_GLOBALS],
+            ['globals', 'globals.nullified', StubsGenerator::GLOBALS, [ 'nullify_globals' => true ]],
             'junk',
             'namespaces',
         ];
@@ -55,13 +56,16 @@ class NodeVisitorTest extends TestCase
                 $outFile = $inFile;
             } elseif (count($case) === 2) {
                 [$inFile, $outFile] = $case;
-            } else {
+            } elseif (count($case) === 3) {
                 [$inFile, $outFile, $symbols] = $case;
+            } else {
+                [$inFile, $outFile, $symbols, $config] = $case;
             }
 
             $inFile = "{$baseDir}{$inFile}.in.php";
             $outFile = "{$baseDir}{$outFile}.out.php";
             $symbols = $symbols ?? StubsGenerator::ALL;
+            $config = $config ?? [];
 
             if (!file_exists($inFile)) {
                 throw new Exception("$inFile does not exist");
@@ -74,6 +78,7 @@ class NodeVisitorTest extends TestCase
                 file_get_contents($inFile),
                 file_get_contents($outFile),
                 $symbols,
+                $config,
                 $inFile,
             ];
         }, $cases);
@@ -82,11 +87,11 @@ class NodeVisitorTest extends TestCase
     /**
      * @dataProvider inputOutputProvider
      */
-    public function testOutput(string $in, string $out, int $symbols, string $filename)
+    public function testOutput(string $in, string $out, int $symbols, array $config, string $filename)
     {
         $this->assertSame(
             $this->normalize($out),
-            $this->normalize($this->print($this->parse($in, $symbols)->getStubStmts())),
+            $this->normalize($this->print($this->parse($in, $symbols, $config)->getStubStmts())),
             "Expected input and output to match for '$filename'"
         );
     }

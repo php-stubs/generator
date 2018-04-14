@@ -1,9 +1,12 @@
 # Changelog
 
+## [0.5] - 2018-04-13
+### Added
+- `--nullify-globals` option: converts all global variable assignments to `null`.
+
 ## [0.4] - 2018-03-17
 ### Fixed
 - Issued a release with the changelog up-to-date.
-
 
 ## [0.3] - 2018-03-17
 ### Changed

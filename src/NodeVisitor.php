@@ -40,7 +40,7 @@ class NodeVisitor extends NodeVisitorAbstract
     private $needsDocumentedGlobals;
     /** @var bool */
     private $needsUndocumentedGlobals;
-    /** @var */
+    /** @var bool */
     private $nullifyGlobals;
 
     /**
@@ -86,12 +86,12 @@ class NodeVisitor extends NodeVisitorAbstract
      */
     public function __construct(int $symbols = StubsGenerator::DEFAULT, array $config = [])
     {
-        $this->needsFunctions = $symbols & StubsGenerator::FUNCTIONS;
-        $this->needsClasses = $symbols & StubsGenerator::CLASSES;
-        $this->needsTraits = $symbols & StubsGenerator::TRAITS;
-        $this->needsInterfaces = $symbols & StubsGenerator::INTERFACES;
-        $this->needsDocumentedGlobals = $symbols & StubsGenerator::DOCUMENTED_GLOBALS;
-        $this->needsUndocumentedGlobals = $symbols & StubsGenerator::UNDOCUMENTED_GLOBALS;
+        $this->needsFunctions = ($symbols & StubsGenerator::FUNCTIONS) !== 0;
+        $this->needsClasses = ($symbols & StubsGenerator::CLASSES) !== 0;
+        $this->needsTraits = ($symbols & StubsGenerator::TRAITS) !== 0;
+        $this->needsInterfaces = ($symbols & StubsGenerator::INTERFACES) !== 0;
+        $this->needsDocumentedGlobals = ($symbols & StubsGenerator::DOCUMENTED_GLOBALS) !== 0;
+        $this->needsUndocumentedGlobals = ($symbols & StubsGenerator::UNDOCUMENTED_GLOBALS) !== 0;
 
         $this->nullifyGlobals = !empty($config['nullify_globals']);
 

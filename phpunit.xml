@@ -4,7 +4,6 @@
 	beStrictAboutChangesToGlobalState="true"
 	beStrictAboutCoversAnnotation="true"
 	beStrictAboutOutputDuringTests="true"
-	beStrictAboutTestSize="true"
 	beStrictAboutTestsThatDoNotTestAnything="true"
 	colors="true"
 	convertErrorsToExceptions="true"

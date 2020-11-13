@@ -11,6 +11,7 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Interface_;
@@ -132,25 +133,27 @@ class NodeVisitor extends NodeVisitorAbstract
             // signatures are fully qualified by the `NameResolver` visitor.
             // (This will already be `true` if it's a ClassMethod.)
             $this->isInDeclaration = true;
-        } elseif ($node instanceof Assign) {
+        } elseif ($node instanceof Expression
+            && $node->expr instanceof Assign
+        ) {
             // Since we don't parse any the bodies of any statements which can
             // hold variable assignments---other than namespaces---we know these
             // assigns are for globals.  Check if we are assigning to `$GLOBALS`
             // with a simple string that's a valid variable identifier.  If so,
             // convert it to a normal variable assignment.
             if (count($this->stack) === 1
-                && $node->var instanceof ArrayDimFetch
-                && $node->var->var instanceof Variable
-                && $node->var->var->name === 'GLOBALS'
-                && $node->var->dim instanceof String_
-                && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $node->var->dim->value)
+                && $node->expr->var instanceof ArrayDimFetch
+                && $node->expr->var->var instanceof Variable
+                && $node->expr->var->var->name === 'GLOBALS'
+                && $node->expr->var->dim instanceof String_
+                && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $node->expr->var->dim->value)
             ) {
-                $node->var = new Variable($node->var->dim->value);
+                $node->expr->var = new Variable($node->expr->var->dim->value);
             }
             // Ensure that class or constant references are fully qualified.
             $this->isInDeclaration = true;
             if ($this->nullifyGlobals) {
-                $node->expr = new ConstFetch(new Name('null'));
+                $node->expr->expr = new ConstFetch(new Name('null'));
             }
         } elseif ($node instanceof If_) {
             if (!$this->isInIf) {
@@ -174,7 +177,7 @@ class NodeVisitor extends NodeVisitorAbstract
         }
         $parent = $this->stack[count($this->stack) - 1] ?? null;
 
-        if ($node instanceof Assign
+        if (($node instanceof Expression && $node->expr instanceof Assign)
             || $node instanceof Function_
             || $node instanceof Class_
             || $node instanceof Interface_
@@ -335,11 +338,12 @@ class NodeVisitor extends NodeVisitorAbstract
 
         if (($this->needsDocumentedGlobals || $this->needsUndocumentedGlobals)
             && !$this->isInIf // Don't keep conditionally declared globals.
-            && $node instanceof Assign
-            && $node->var instanceof Variable
-            && is_string($node->var->name)
+            && $node instanceof Expression
+            && $node->expr instanceof Assign
+            && $node->expr->var instanceof Variable
+            && is_string($node->expr->var->name)
         ) {
-            $this->count('globals', $node->var->name);
+            $this->count('globals', $node->expr->var->name);
             // We'll keep regular global variable declarations, depending on
             // whether or not they are documented.
             if ($node->getDocComment()) {

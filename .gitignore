@@ -1,35 +1,3 @@
-# Composer dependencies.
+/composer.lock
 /vendor/
-
-# VSCode stuff (ignore everything but these config files).
-/.vscode/
-!/.vscode/tasks.json
-!/.vscode/launch.json
-!/.vscode/cSpell.json
-!/.vscode/settings.json
-!/.vscode/extensions.json
-
-# PHP CS Fixer cache file
 .php_cs.cache
-
-
-# General rules from gitignore templates.
-~*
-._*
-Icon
-*.log
-.apdisk
-.Trashes
-.AppleDB
-.DS_Store
-.fseventsd
-.LSOverride
-.AppleDouble
-.AppleDesktop
-Temporary Items
-.Spotlight-V100
-.TemporaryItems
-.VolumeIcon.icns
-Network Trash Folder
-.DocumentRevisions-V100
-.com.apple.timemachine.donotpresent

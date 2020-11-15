@@ -1,16 +1,28 @@
-language: php
+# TravisCI configuration for php-stubs/generator
+
+language: "php"
+os:
+  - "linux"
+dist: "bionic"
 
 php:
-  - '7.1'
-  - '7.2'
-  - nightly
+  - "7.3"
+  - "7.4"
+  - "nightly"
 
-matrix:
+jobs:
   allow_failures:
-    - php: nightly
+    - php: "nightly"
 
-install: composer install
+cache:
+  directories:
+    - "${HOME}/.composer/cache"
+
+before_install:
+  - "composer validate --strict"
+
+install:
+  - "composer update"
 
 script:
-  - vendor/bin/phpunit
-  - vendor/bin/psalm
+  - "vendor/bin/phpunit"

@@ -1,6 +1,6 @@
 # PHP Stubs Generator
 
-[![Build Status](https://travis-ci.org/GiacoCorsiglia/php-stubs-generator.svg?branch=master)](https://travis-ci.org/GiacoCorsiglia/php-stubs-generator)
+[![Build Status](https://travis-ci.org/php-stubs/generator.svg?branch=master)](https://travis-ci.com/github/php-stubs/generator)
 
 Use this tool to generate stub declarations for functions, classes, interfaces, and global variables defined in any PHP code.  The stubs can subsequently be used to facilitate IDE completion or static analysis via [Psalm](https://getpsalm.org) or potentially other tools.  Stub generation is particularly useful for code which mixes definitions with side-effects.
 
@@ -75,7 +75,7 @@ namespace MyNamespace {
 To install:
 
 ```
-composer global require giacocorsiglia/stubs-generator
+composer global require php-stubs/generator
 ```
 
 To get the pretty-printed stubs for all the PHP files in a directory:
@@ -103,7 +103,7 @@ generate-stubs --help
 To install:
 
 ```
-composer require giacocorsiglia/stubs-generator
+composer require php-stubs/generator
 ```
 
 ### Simple Example

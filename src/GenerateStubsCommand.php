@@ -91,7 +91,7 @@ class GenerateStubsCommand extends Command
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -129,6 +129,8 @@ class GenerateStubsCommand extends Command
         } else {
             $output->writeln($prettyPrinted);
         }
+
+        return 0;
     }
 
     private function printStats(OutputStyle $io, Result $result): void

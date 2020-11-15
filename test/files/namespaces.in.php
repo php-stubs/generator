@@ -20,8 +20,8 @@ namespace A {
     }
 }
 namespace {
-    use D\D;
     use const B\B;
+    use D\D;
 
     class A extends C implements D
     {

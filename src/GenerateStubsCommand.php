@@ -33,6 +33,7 @@ class GenerateStubsCommand extends Command
         ['documented-globals', StubsGenerator::DOCUMENTED_GLOBALS],
         ['undocumented-globals', StubsGenerator::UNDOCUMENTED_GLOBALS],
         ['globals', StubsGenerator::GLOBALS],
+        ['constants', StubsGenerator::CONSTANTS],
     ];
 
     /**

@@ -5,6 +5,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
@@ -12,6 +13,7 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
@@ -41,6 +43,8 @@ class NodeVisitor extends NodeVisitorAbstract
     private $needsDocumentedGlobals;
     /** @var bool */
     private $needsUndocumentedGlobals;
+    /** @var bool */
+    private $needsConstants;
     /** @var bool */
     private $nullifyGlobals;
 
@@ -79,6 +83,7 @@ class NodeVisitor extends NodeVisitorAbstract
         'classes' => [],
         'interfaces' => [],
         'traits' => [],
+        'constants' => [],
         'globals' => [],
     ];
 
@@ -93,6 +98,7 @@ class NodeVisitor extends NodeVisitorAbstract
         $this->needsInterfaces = ($symbols & StubsGenerator::INTERFACES) !== 0;
         $this->needsDocumentedGlobals = ($symbols & StubsGenerator::DOCUMENTED_GLOBALS) !== 0;
         $this->needsUndocumentedGlobals = ($symbols & StubsGenerator::UNDOCUMENTED_GLOBALS) !== 0;
+        $this->needsConstants = ($symbols & StubsGenerator::CONSTANTS) !== 0;
 
         $this->nullifyGlobals = !empty($config['nullify_globals']);
 
@@ -155,6 +161,14 @@ class NodeVisitor extends NodeVisitorAbstract
             if ($this->nullifyGlobals) {
                 $node->expr->expr = new ConstFetch(new Name('null'));
             }
+        } elseif ($node instanceof Const_) {
+            $this->isInDeclaration = true;
+        } elseif (
+            $node instanceof Expression &&
+            $node->expr instanceof FuncCall &&
+            $node->expr->name->parts[0] === 'define'
+        ) {
+            $this->isInDeclaration = true;
         } elseif ($node instanceof If_) {
             if (!$this->isInIf) {
                 // We'll examine the first level inside of an if statement to
@@ -182,6 +196,12 @@ class NodeVisitor extends NodeVisitorAbstract
             || $node instanceof Class_
             || $node instanceof Interface_
             || $node instanceof Trait_
+            || $node instanceof Const_
+            || (
+                $node instanceof Expression &&
+                $node->expr instanceof FuncCall &&
+                $node->expr->name->parts[0] === 'define'
+            )
         ) {
             // We're leaving one of these.
             $this->isInDeclaration = false;
@@ -334,6 +354,32 @@ class NodeVisitor extends NodeVisitorAbstract
             return $this->needsTraits
                 && $this->count('traits', $fullyQualifiedName)
                 && !trait_exists($fullyQualifiedName);
+        }
+
+        if ($this->needsConstants) {
+            if ($node instanceof Const_) {
+                $node->consts = \array_filter(
+                    $node->consts,
+                    function (\PhpParser\Node\Const_ $const) {
+                        $fullyQualifiedName = $const->name->name;
+                        return $this->count('constants', $fullyQualifiedName)
+                            && !defined($fullyQualifiedName);
+                    }
+                );
+
+                return count($node->consts) > 0;
+            }
+
+            if (
+                $node instanceof Expression &&
+                $node->expr instanceof FuncCall &&
+                $node->expr->name->parts[0] === 'define'
+            ) {
+                $fullyQualifiedName = $node->expr->args[0]->value->value;
+
+                return $this->count('constants', $fullyQualifiedName)
+                    && !defined($fullyQualifiedName);
+            }
         }
 
         if (($this->needsDocumentedGlobals || $this->needsUndocumentedGlobals)

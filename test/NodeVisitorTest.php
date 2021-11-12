@@ -44,6 +44,7 @@ class NodeVisitorTest extends TestCase
             ['globals', 'globals.nullified', StubsGenerator::GLOBALS, [ 'nullify_globals' => true ]],
             'junk',
             'namespaces',
+            'constants',
         ];
 
         $baseDir = __DIR__ . '/files/';

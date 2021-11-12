@@ -102,7 +102,7 @@ class NodeVisitorTest extends TestCase
         // Really should be testing AST output, this is just easier...
         $string = trim(
             // https://stackoverflow.com/questions/709669/how-do-i-remove-blank-lines-from-text-in-php
-            preg_replace('/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/', '\n', $string)
+            preg_replace("/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/", "\n", $string)
         );
         $string = str_replace([
             'abstract public',

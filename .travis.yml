@@ -8,11 +8,7 @@ dist: "bionic"
 php:
   - "7.3"
   - "7.4"
-  - "nightly"
-
-jobs:
-  allow_failures:
-    - php: "nightly"
+  - "8.0"
 
 cache:
   directories:
@@ -25,4 +21,4 @@ install:
   - "composer update"
 
 script:
-  - "vendor/bin/phpunit"
+  - "vendor/bin/phpunit --verbose"

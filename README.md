@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/php-stubs/generator.svg?branch=master)](https://travis-ci.com/github/php-stubs/generator)
 
-Use this tool to generate stub declarations for functions, classes, interfaces, and global variables defined in any PHP code.  The stubs can subsequently be used to facilitate IDE completion or static analysis via [Psalm](https://getpsalm.org) or potentially other tools.  Stub generation is particularly useful for code which mixes definitions with side-effects.
+Use this tool to generate stub declarations for functions, classes, interfaces, and global variables defined in any PHP code. The stubs can subsequently be used to facilitate IDE completion or static analysis via [Psalm](https://getpsalm.org) or potentially other tools.  Stub generation is particularly useful for code which mixes definitions with side-effects.
 
 The generator is based on nikic's [PHP-Parser](https://github.com/nikic/PHP-Parser), and the code also relies on several [Symfony](https://symfony.com) components.
 
@@ -155,11 +155,10 @@ The set of symbol types are:
 - `StubsGenerator::DOCUMENTED_GLOBALS`: Global variables, but only those with a doc comment.
 - `StubsGenerator::UNDOCUMENTED_GLOBALS`: Global variable, but only those without a doc comment.
 - `StubsGenerator::GLOBALS`: Shortcut to include both documented and undocumented global variables.
+- `StubsGenerator::CONSTANTS`: Constant declarations.
 - `StubsGenerator::DEFAULT`: Shortcut to include everything _except_ undocumented global variables.
 - `StubsGenerator::ALL`: Shortcut to include everything.
 
 ## TODO
 
-- Add support for constants declared with `const`.
-- Add support for constants declared with `define()`.
-    - Consider parsing function and method bodies for these declarations.
+- Consider parsing function and method bodies for constant declarations.

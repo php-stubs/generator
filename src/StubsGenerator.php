@@ -2,6 +2,7 @@
 namespace StubsGenerator;
 
 use PhpParser\Error;
+use PhpParser\Lexer\Emulative;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\ParserFactory;
@@ -111,7 +112,8 @@ class StubsGenerator
      */
     public function generate(Finder $finder): Result
     {
-        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+        // Change default PHP 8.1 lexer to PHP 8.0.
+        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, new Emulative(['phpVersion' => Emulative::PHP_8_0]));
 
         $traverser = new NodeTraverser();
         $visitor = new NodeVisitor($this->symbols, $this->config);

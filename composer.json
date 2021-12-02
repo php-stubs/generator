@@ -1,5 +1,5 @@
 {
-    "name": "giacocorsiglia/stubs-generator",
+    "name": "php-stubs/generator",
     "description": "Generate stubs from any PHP code for IDE completion and static analysis.",
     "type": "library",
     "license": "MIT",
@@ -7,7 +7,7 @@
         "IDE",
         "static analysis"
     ],
-    "homepage": "https://github.com/GiacoCorsiglia/php-stubs-generator",
+    "homepage": "https://github.com/php-stubs/generator",
     "authors": [
         {
             "name": "Giaco Corsiglia",
@@ -16,23 +16,22 @@
     ],
     "autoload": {
         "psr-4": {
-            "StubsGenerator\\": "src"
+            "StubsGenerator\\": "src/"
         }
     },
     "bin": [
         "bin/generate-stubs"
     ],
     "require": {
-        "php": ">=7.1",
-        "symfony/console": "^4.0",
-        "nikic/php-parser": "^3.1",
-        "symfony/finder": "^4.0",
-        "symfony/filesystem": "^4.0"
+        "php": "^7.3 || ^8.0",
+        "nikic/php-parser": "^4.10",
+        "symfony/console": "^5.1",
+        "symfony/filesystem": "^5.0",
+        "symfony/finder": "^5.0"
     },
     "require-dev": {
-        "vimeo/psalm": "^0.3.92",
-        "phpunit/phpunit": "^7.0",
-        "friendsofphp/php-cs-fixer": "^2.10"
-    },
-    "minimum-stability": "stable"
+        "vimeo/psalm": "^4.1",
+        "phpunit/phpunit": "^9.4",
+        "friendsofphp/php-cs-fixer": "^2.16"
+    }
 }

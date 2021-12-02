@@ -67,18 +67,25 @@ class StubsGenerator
     public const GLOBALS = self::DOCUMENTED_GLOBALS | self::UNDOCUMENTED_GLOBALS;
 
     /**
+     * Constant symbol type.
+     *
+     * @var int
+     */
+    public const CONSTANTS = 64;
+
+    /**
      * The default set of symbol types.
      *
      * @var int
      */
-    public const DEFAULT = self::FUNCTIONS | self::CLASSES | self::TRAITS | self::INTERFACES | self::DOCUMENTED_GLOBALS;
+    public const DEFAULT = self::FUNCTIONS | self::CLASSES | self::TRAITS | self::INTERFACES | self::DOCUMENTED_GLOBALS | self::CONSTANTS;
 
     /**
      * Shortcut to include every symbol type.
      *
      * @var int
      */
-    public const ALL = self::FUNCTIONS | self::CLASSES | self::TRAITS | self::INTERFACES | self::GLOBALS;
+    public const ALL = self::FUNCTIONS | self::CLASSES | self::TRAITS | self::INTERFACES | self::GLOBALS | self::CONSTANTS;
 
     /** @var int */
     private $symbols;

@@ -33,6 +33,7 @@ class GenerateStubsCommand extends Command
         ['documented-globals', StubsGenerator::DOCUMENTED_GLOBALS],
         ['undocumented-globals', StubsGenerator::UNDOCUMENTED_GLOBALS],
         ['globals', StubsGenerator::GLOBALS],
+        ['constants', StubsGenerator::CONSTANTS],
     ];
 
     /**
@@ -92,7 +93,7 @@ class GenerateStubsCommand extends Command
         }
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $visitor = null;
@@ -147,6 +148,8 @@ class GenerateStubsCommand extends Command
         } else {
             $output->writeln($prettyPrinted);
         }
+
+        return 0;
     }
 
     private function printStats(OutputStyle $io, Result $result): void

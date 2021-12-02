@@ -34,8 +34,3 @@ echo 'sup';
 return [
     'foo'
 ];
-
-// TODO: We should start parsing constants!
-const FOO = 'bar';
-
-define('FIZ', 'BUZ');

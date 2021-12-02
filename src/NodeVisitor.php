@@ -90,7 +90,7 @@ class NodeVisitor extends NodeVisitorAbstract
     /**
      * @param int $symbols Set of symbol types to include stubs for.
      */
-    public function __construct(int $symbols = StubsGenerator::DEFAULT, array $config = [])
+    public function init(int $symbols = StubsGenerator::DEFAULT, array $config = [])
     {
         $this->needsFunctions = ($symbols & StubsGenerator::FUNCTIONS) !== 0;
         $this->needsClasses = ($symbols & StubsGenerator::CLASSES) !== 0;

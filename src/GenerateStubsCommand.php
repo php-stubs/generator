@@ -59,6 +59,7 @@ class GenerateStubsCommand extends Command
             ->addOption('out', null, InputOption::VALUE_REQUIRED, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Whether to force an overwrite.')
             ->addOption('finder', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `Symfony\Finder` instance including the set of files that should be parsed.  Can be used instead of, but not in addition to, passing sources directly.')
+            ->addOption('visitor', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `StubsGenerator\NodeVisitor` instance to replace the default node visitor.')
             ->addOption('header', null, InputOption::VALUE_REQUIRED, 'A doc comment to prepend to the top of the generated stubs file.  (Will be added below the opening `<?php` tag.)', '')
             ->addOption('nullify-globals', null, InputOption::VALUE_NONE, 'Initialize all global variables with a value of `null`, instead of their assigned value.')
             ->addOption('stats', null, InputOption::VALUE_NONE, 'Whether to print stats instead of outputting stubs.  Stats will always be printed if --out is provided.');
@@ -95,13 +96,30 @@ class GenerateStubsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        $visitor = null;
+        $visitorPath = $input->getOption('visitor');
+
+        if ($visitorPath) {
+            $visitorPath = $this->resolvePath($visitorPath);
+            if (!$this->filesystem->exists($visitorPath) || is_dir($visitorPath)) {
+                throw new InvalidArgumentException("Bad --visitor path: '$visitorPath' does not exist or is a directory.");
+            }
+            try {
+                $visitor = @include $visitorPath;
+            } catch (Exception $e) {
+                throw new RuntimeException("Could not resolve a `StubsGenerator\NodeVisitor` from '$visitorPath'.", 0, $e);
+            }
+            if (!$visitor || !($visitor instanceof NodeVisitor)) {
+                throw new RuntimeException("Could not resolve a `StubsGenerator\NodeVisitor` from '$visitorPath'.");
+            }
+        }
 
         $finder = $this->parseSources($input);
         $generator = new StubsGenerator($this->parseSymbols($input), [
             'nullify_globals' => $input->getOption('nullify-globals'),
         ]);
 
-        $result = $generator->generate($finder);
+        $result = $generator->generate($finder, $visitor);
 
         $printer = new Standard();
 

@@ -16,7 +16,8 @@ class NodeVisitorTest extends TestCase
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
-        $visitor = new NodeVisitor($symbols, $config);
+        $visitor = new NodeVisitor();
+        $visitor->init($symbols, $config);
         $traverser->addVisitor($visitor);
 
         $stmts = $parser->parse($php);

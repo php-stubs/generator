@@ -166,6 +166,7 @@ class NodeVisitor extends NodeVisitorAbstract
         } elseif (
             $node instanceof Expression &&
             $node->expr instanceof FuncCall &&
+            $node->expr->name instanceof Name &&
             $node->expr->name->parts[0] === 'define'
         ) {
             $this->isInDeclaration = true;
@@ -200,6 +201,7 @@ class NodeVisitor extends NodeVisitorAbstract
             || (
                 $node instanceof Expression &&
                 $node->expr instanceof FuncCall &&
+                $node->expr->name instanceof Name &&
                 $node->expr->name->parts[0] === 'define'
             )
         ) {
@@ -373,6 +375,7 @@ class NodeVisitor extends NodeVisitorAbstract
             if (
                 $node instanceof Expression &&
                 $node->expr instanceof FuncCall &&
+                $node->expr->name instanceof Name &&
                 $node->expr->name->parts[0] === 'define'
             ) {
                 $fullyQualifiedName = $node->expr->args[0]->value->value;

@@ -52,7 +52,7 @@ class NodeVisitor extends NodeVisitorAbstract
      * @psalm-suppress PropertyNotSetInConstructor
      * @var Node[]
      */
-    private $stack;
+    protected $stack;
 
     /** @var Namespace_[] */
     private $namespaces = [];

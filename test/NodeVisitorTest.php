@@ -36,6 +36,7 @@ class NodeVisitorTest extends TestCase
     {
         $cases = [
             'classes',
+            ['classes', 'classes-include-inaccessible-class-nodes', null, ['include_inaccessible_class_nodes' => true]],
             'classes-with-dependencies',
             'circular-dependency',
             'functions',

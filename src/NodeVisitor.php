@@ -11,6 +11,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Const_;
@@ -19,6 +20,7 @@ use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
@@ -47,6 +49,8 @@ class NodeVisitor extends NodeVisitorAbstract
     private $needsConstants;
     /** @var bool */
     private $nullifyGlobals;
+    /** @var bool */
+    private $includeInaccessibleClassNodes;
 
     /**
      * @psalm-suppress PropertyNotSetInConstructor
@@ -101,6 +105,7 @@ class NodeVisitor extends NodeVisitorAbstract
         $this->needsConstants = ($symbols & StubsGenerator::CONSTANTS) !== 0;
 
         $this->nullifyGlobals = !empty($config['nullify_globals']);
+        $this->includeInaccessibleClassNodes = ($config['include_inaccessible_class_nodes'] ?? false) === true;
 
         $this->globalNamespace = new Namespace_();
     }
@@ -238,6 +243,13 @@ class NodeVisitor extends NodeVisitorAbstract
             // Implies `$parent instanceof ClassLike`, which means $node is a
             // either a method, property, or constant, or its part of the
             // declaration itself (e.g., `extends`).
+
+            if (!$this->includeInaccessibleClassNodes && $parent instanceof Class_ && ($node instanceof ClassMethod || $node instanceof ClassConst || $node instanceof Property)) {
+                if ($node->isPrivate() || ($parent->isFinal() && $node->isProtected())) {
+                    return NodeTraverser::REMOVE_NODE;
+                }
+            }
+
             return;
         }
 

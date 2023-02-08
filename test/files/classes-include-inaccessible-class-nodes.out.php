@@ -1,6 +1,6 @@
 <?php
 /** doc */
-abstract class A extends B implements C
+abstract class A extends \B implements \C
 {
     /** doc */
     protected const A = 'B';
@@ -16,35 +16,29 @@ abstract class A extends B implements C
     /** doc */
     public static function b($a): void
     {
-        return;
     }
 
     /** doc */
     abstract public function c($a): string;
 
     /** doc */
-    protected function d($a): void
+    protected function d($a) : void
     {
-        return;
     }
 
     /** doc */
-    abstract protected function e($a): string;
+    protected abstract function e($a) : string;
 
     /** doc */
     private function f($a): void
     {
-        return;
     }
 }
 
-if (!class_exists('D')) {
-    class D
+class D
+{
+    public function a(string $a): string
     {
-        public function a(string $a): string
-        {
-            return '';
-        }
     }
 }
 
@@ -57,15 +51,13 @@ final class E
     protected $b = 'b';
 
     /** doc */
-    public function a($a): void
+    public function a($a) : void
     {
-        return;
     }
 
     /** doc */
     protected function b($a): void
     {
-        return;
     }
 }
 
@@ -75,8 +67,7 @@ trait F
     private $a = 'a';
 
     /** doc */
-    private function a($a): void
+    private function a($a) : void
     {
-        return;
     }
 }

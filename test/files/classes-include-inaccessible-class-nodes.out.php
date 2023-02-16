@@ -27,7 +27,7 @@ abstract class A extends \B implements \C
     }
 
     /** doc */
-    protected abstract function e($a) : string;
+    protected function e($a) : string;
 
     /** doc */
     private function f($a): void

@@ -79,4 +79,13 @@ trait F
     {
         return;
     }
+
+    /** doc */
+    abstract public function b($a): string;
+
+    /** doc */
+    abstract protected function c($a): string;
+
+    /** doc */
+    abstract private function d($a): string;
 }

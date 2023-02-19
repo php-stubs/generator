@@ -89,3 +89,26 @@ trait F
     /** doc */
     abstract private function d($a): string;
 }
+
+final class G
+{
+    use F;
+
+    /** doc */
+    public function b($a): string
+    {
+        return '';
+    }
+
+    /** doc */
+    protected function c($a): string
+    {
+        return '';
+    }
+
+    /** doc */
+    private function d($a): string
+    {
+        return '';
+    }
+}

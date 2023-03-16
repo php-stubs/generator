@@ -2,11 +2,11 @@
 
 [![Build Status](https://travis-ci.com/php-stubs/generator.svg?branch=master)](https://travis-ci.com/github/php-stubs/generator)
 
-Use this tool to generate stub declarations for functions, classes, interfaces, and global variables defined in any PHP code. The stubs can subsequently be used to facilitate IDE completion or static analysis via [Psalm](https://getpsalm.org) or potentially other tools.  Stub generation is particularly useful for code which mixes definitions with side-effects.
+Use this tool to generate stub declarations for functions, classes, interfaces, and global variables defined in any PHP code. The stubs can subsequently be used to facilitate IDE completion or static analysis via [PHPStan](https://phpstan.org) or potentially other tools.  Stub generation is particularly useful for code which mixes definitions with side-effects.
 
 The generator is based on nikic's [PHP-Parser](https://github.com/nikic/PHP-Parser), and the code also relies on several [Symfony](https://symfony.com) components.
 
-Contributions in the form of issue reports or Pull Requests are welcome!
+Contributions in the form of [issues](https://github.com/php-stubs/generator/issues/new) or Pull Requests are welcome!
 
 ## Example
 
@@ -69,18 +69,17 @@ namespace MyNamespace {
 }
 ```
 
-
 ## Command Line Usage
 
 To install:
 
-```
+```bash
 composer global require php-stubs/generator
 ```
 
 To get the pretty-printed stubs for all the PHP files in a directory:
 
-```
+```bash
 generate-stubs /path/to/my-library
 ```
 
@@ -88,13 +87,13 @@ You may also pass multiple directories, or filenames, separated by spaces.  All 
 
 To write the stubs to a file (and see a few statistics in the stdout):
 
-```
+```bash
 generate-stubs /path/to/my-library --out=/path/to/output.php
 ```
 
 For the complete set of command line options:
 
-```
+```bash
 generate-stubs --help
 ```
 
@@ -102,7 +101,7 @@ generate-stubs --help
 
 To install:
 
-```
+```bash
 composer require php-stubs/generator
 ```
 
@@ -158,7 +157,3 @@ The set of symbol types are:
 - `StubsGenerator::CONSTANTS`: Constant declarations.
 - `StubsGenerator::DEFAULT`: Shortcut to include everything _except_ undocumented global variables.
 - `StubsGenerator::ALL`: Shortcut to include everything.
-
-## TODO
-
-- Consider parsing function and method bodies for constant declarations.

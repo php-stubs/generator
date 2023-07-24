@@ -5,6 +5,7 @@ use ArrayIterator;
 use IteratorAggregate;
 use PhpParser\PrettyPrinter\Standard;
 use PhpParser\PrettyPrinterAbstract;
+use Traversable;
 
 /**
  * Contains the results of stub generation, including the stubs themselves as
@@ -33,7 +34,7 @@ class Result implements IteratorAggregate
         $this->unparsed = $unparsed;
     }
 
-    public function getIterator()
+    public function getIterator(): Traversable
     {
         return new ArrayIterator($this->getStubStmts());
     }

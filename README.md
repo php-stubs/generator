@@ -1,6 +1,6 @@
 # PHP Stubs Generator
 
-[![Build Status](https://travis-ci.com/php-stubs/generator.svg?branch=master)](https://travis-ci.com/github/php-stubs/generator)
+[![Build Status](https://github.com/php-stubs/generator/actions/workflows/test.yml/badge.svg)](https://github.com/php-stubs/generator/actions/workflows/test.yml)
 
 Use this tool to generate stub declarations for functions, classes, interfaces, and global variables defined in any PHP code. The stubs can subsequently be used to facilitate IDE completion or static analysis via [PHPStan](https://phpstan.org) or potentially other tools.  Stub generation is particularly useful for code which mixes definitions with side-effects.
 

@@ -323,7 +323,7 @@ class NodeVisitor extends NodeVisitorAbstract
     /**
      * Returns the counts of all symbols included in the stubs, grouped by type.
      *
-     * These counts are built up during traveral.
+     * These counts are built up during traversal.
      *
      * @psalm-return array<string, array<string, int>>
      */
@@ -466,7 +466,7 @@ class NodeVisitor extends NodeVisitorAbstract
             $namespaceMatches = !$clwd->namespace;
         }
 
-        // Reduntant check to make Psalm happy.
+        // Redundant check to make Psalm happy.
         if ($this->currentClassLikeNamespace && $namespaceMatches) {
             $this->currentClassLikeNamespace->stmts[] = $clwd->node;
         } else {

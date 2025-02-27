@@ -38,6 +38,6 @@ jobs:
       run: "composer validate --strict"
   
     - name: "Install dependencies"
-      run: "composer install"
+      run: "composer update --no-interaction"
 
     - run: "composer run test"

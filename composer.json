@@ -33,5 +33,8 @@
         "vimeo/psalm": "^4.1",
         "phpunit/phpunit": "^9.4",
         "friendsofphp/php-cs-fixer": "^2.16 || ^3.12"
+    },
+    "scripts": {
+        "test": "phpunit --verbose"
     }
 }

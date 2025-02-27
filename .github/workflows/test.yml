@@ -1,0 +1,42 @@
+name: "Test"
+
+on:
+  push:
+    branches:
+    - "master"
+  pull_request: null
+
+permissions:
+  contents: "read"
+
+jobs:
+  test:
+    runs-on: "ubuntu-latest"
+
+    strategy:
+        matrix:
+          php-version:
+          - "7.4"
+          - "8.0"
+          - "8.1"
+          - "8.2"
+          - "8.3"
+          - "8.4"
+
+    steps:
+    - name: "Checkout repository"
+      uses: "actions/checkout@v4"
+
+    - name: "Set up PHP"
+      uses: "shivammathur/setup-php@v2"
+      with:
+        coverage: "none"
+        php-version: "${{ matrix.php-version }}"
+
+    - name: "Vadliate composer"
+      run: "composer validate --strict"
+  
+    - name: "Install dependencies"
+      run: "composer install"
+
+    - run: "composer run test"

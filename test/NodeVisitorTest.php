@@ -12,7 +12,7 @@ class NodeVisitorTest extends TestCase
 {
     private function parse(string $php, int $symbols, array $config): NodeVisitor
     {
-        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());

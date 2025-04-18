@@ -24,17 +24,23 @@
     ],
     "require": {
         "php": "^7.3 || ^8.0",
-        "nikic/php-parser": "^4.10",
-        "symfony/console": "^5.1 || ^6.0",
-        "symfony/filesystem": "^5.0 || ^6.0",
-        "symfony/finder": "^5.0 || ^6.0"
+        "nikic/php-parser": "^4.10 || ^5.1",
+        "symfony/console": "^5.1 || ^6.0 || ^7.0",
+        "symfony/filesystem": "^5.0 || ^6.0 || ^7.0",
+        "symfony/finder": "^5.0 || ^6.0 || ^7.0"
     },
     "require-dev": {
-        "vimeo/psalm": "^4.1",
-        "phpunit/phpunit": "^9.4",
-        "friendsofphp/php-cs-fixer": "^2.16 || ^3.12"
+        "friendsofphp/php-cs-fixer": "3.4.0 || ^3.12",
+        "phpstan/phpstan": "^1.0 || ^2.0",
+        "phpunit/phpunit": "^9.4"
     },
     "scripts": {
-        "test": "phpunit --verbose"
+        "test": "phpunit --verbose",
+        "cs:check": "php-cs-fixer check",
+        "cs:fix": "php-cs-fixer fix",
+        "phpstan": "phpstan analyse"
+    },
+    "config": {
+        "sort-packages": true
     }
 }

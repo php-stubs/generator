@@ -112,10 +112,10 @@ class StubsGenerator
      */
     public function generate(Finder $finder, NodeVisitor $visitor = null): Result
     {
-        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
         if (!($visitor instanceof NodeVisitor)) {
-            $visitor = new NodeVisitor;
+            $visitor = new NodeVisitor();
         }
 
         $visitor->init($this->symbols, $this->config);

@@ -244,10 +244,12 @@ class NodeVisitor extends NodeVisitorAbstract
             // either a method, property, or constant, or its part of the
             // declaration itself (e.g., `extends`).
 
-            if (!$this->includeInaccessibleClassNodes && $parent instanceof Class_ && ($node instanceof ClassMethod || $node instanceof ClassConst || $node instanceof Property)) {
-                if ($node->isPrivate() || ($parent->isFinal() && $node->isProtected())) {
-                    return NodeTraverser::REMOVE_NODE;
-                }
+            if (!$this->includeInaccessibleClassNodes
+                && $parent instanceof Class_
+                && ($node instanceof ClassMethod || $node instanceof ClassConst || $node instanceof Property)
+                && ($node->isPrivate() || $node->isProtected())
+            ) {
+                return NodeTraverser::REMOVE_NODE;
             }
 
             return;

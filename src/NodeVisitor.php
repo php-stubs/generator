@@ -426,7 +426,7 @@ class NodeVisitor extends NodeVisitorAbstract
      * @return bool If true, this is the first declaration of this type with
      *              this name, so it can be safely included.
      */
-    private function count(string $type, string $name = null): bool
+    private function count(string $type, ?string $name = null): bool
     {
         assert(isset($this->counts[$type]), 'Expected valid `$type`');
 

@@ -105,7 +105,7 @@ class Result implements IteratorAggregate
      *
      * @return string The pretty printed version.
      */
-    public function prettyPrint(PrettyPrinterAbstract $printer = null): string
+    public function prettyPrint(?PrettyPrinterAbstract $printer = null): string
     {
         if (!$printer) {
             $printer = new Standard();

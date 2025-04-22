@@ -106,11 +106,11 @@ class StubsGenerator
      * pretty-printed stubs.
      *
      * @param Finder $finder The set of files to generate (merged) stubs for.
-     * @param NodeVisitor $visitor The optional node visitor to override the default.
+     * @param NodeVisitor|null $visitor The optional node visitor to override the default.
      *
      * @return Result
      */
-    public function generate(Finder $finder, NodeVisitor $visitor = null): Result
+    public function generate(Finder $finder, ?NodeVisitor $visitor = null): Result
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 

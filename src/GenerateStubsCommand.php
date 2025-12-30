@@ -58,7 +58,7 @@ class GenerateStubsCommand extends Command
             ->addArgument('sources', InputArgument::IS_ARRAY, 'The sources from which to generate stubs.  Either directories or specific files.  At least one must be specified, unless --finder is specified.')
             ->addOption('out', null, InputOption::VALUE_REQUIRED, 'Path to a file to write pretty-printed stubs to.  If unset, stubs will be written to stdout.')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Whether to force an overwrite.')
-            ->addOption('finder', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `Symfony\Finder` instance including the set of files that should be parsed.  Can be used instead of, but not in addition to, passing sources directly.')
+            ->addOption('finder', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `StubsGenerator\Finder` instance including the set of files that should be parsed.  Can be used instead of, but not in addition to, passing sources directly.')
             ->addOption('visitor', null, InputOption::VALUE_REQUIRED, 'Path to a PHP file which returns a `StubsGenerator\NodeVisitor` instance to replace the default node visitor.')
             ->addOption('header', null, InputOption::VALUE_REQUIRED, 'A doc comment to prepend to the top of the generated stubs file.  (Will be added below the opening `<?php` tag.)', '')
             ->addOption('nullify-globals', null, InputOption::VALUE_NONE, 'Initialize all global variables with a value of `null`, instead of their assigned value.')
@@ -198,10 +198,10 @@ class GenerateStubsCommand extends Command
             try {
                 $finder = @include $finderPath;
             } catch (Exception $e) {
-                throw new RuntimeException("Could not resolve a `Symfony\Finder` from '$finderPath'.", 0, $e);
+                throw new RuntimeException("Could not resolve a `StubsGenerator\Finder` from '$finderPath'.", 0, $e);
             }
             if (!$finder || !($finder instanceof Finder)) {
-                throw new RuntimeException("Could not resolve a `Symfony\Finder` from '$finderPath'.");
+                throw new RuntimeException("Could not resolve a `StubsGenerator\Finder` from '$finderPath'.");
             }
             return $finder;
         }

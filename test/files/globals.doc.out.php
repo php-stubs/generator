@@ -1,6 +1,6 @@
 <?php
-/** doc */
+/** @var string */
 $a = 'a' . 'a';
 
-/** @doc */
+/** @var string $b */
 $b = 'b' . 'b';

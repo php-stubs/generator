@@ -1,8 +1,8 @@
 <?php
-/** doc */
+/** @var string */
 $a = 'a' . 'a';
 
-/** @doc */
+/** @var string $b */
 $GLOBALS['b'] = 'b' . 'b';
 
 $c = 'c' . 'c';
@@ -25,3 +25,9 @@ $$foo = 'bar';
 
 function () {
 };
+
+/** doc */
+$x = 'x' . 'x';
+
+/** @doc */
+$GLOBALS['y'] = 'y' . 'y';

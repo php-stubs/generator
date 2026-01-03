@@ -9,8 +9,6 @@ $c = \null;
 
 $d = \null;
 
-/** doc */
 $x = \null;
 
-/** @doc */
 $y = \null;

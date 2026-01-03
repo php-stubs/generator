@@ -23,6 +23,7 @@ jobs:
           - "8.2"
           - "8.3"
           - "8.4"
+          - "8.5"
 
     steps:
     - name: "Checkout repository"
@@ -36,7 +37,7 @@ jobs:
 
     - name: "Vadliate composer"
       run: "composer validate --strict"
-  
+
     - name: "Install dependencies"
       run: "composer update --no-interaction"
 

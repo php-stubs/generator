@@ -404,12 +404,13 @@ class NodeVisitor extends NodeVisitorAbstract
             && $node->expr->var instanceof Variable
             && is_string($node->expr->var->name)
         ) {
-            $this->count('globals', $node->expr->var->name);
             // We'll keep regular global variable declarations, depending on
             // whether or not they are documented.
-            if ($node->getDocComment()) {
+            if ($this->needsDocumentedGlobals && $node->getDocComment()) {
+                $this->count('globals', $node->expr->var->name);
                 return $this->needsDocumentedGlobals;
-            } else {
+            } elseif ($this->needsUndocumentedGlobals) {
+                $this->count('globals', $node->expr->var->name);
                 return $this->needsUndocumentedGlobals;
             }
         }

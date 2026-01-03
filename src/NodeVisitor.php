@@ -376,8 +376,14 @@ class NodeVisitor extends NodeVisitorAbstract
                     $node->consts,
                     function (\PhpParser\Node\Const_ $const) {
                         $fullyQualifiedName = $const->name->name;
-                        return $this->count('constants', $fullyQualifiedName)
-                            && !defined($fullyQualifiedName);
+
+                        if (
+                            !$this->isInIf ||
+                            !isset($this->counts['constants'][$fullyQualifiedName])
+                        ) {
+                            return $this->count('constants', $fullyQualifiedName)
+                                   && !defined($fullyQualifiedName);
+                        }
                     }
                 );
 
@@ -392,8 +398,13 @@ class NodeVisitor extends NodeVisitorAbstract
             ) {
                 $fullyQualifiedName = $node->expr->args[0]->value->value;
 
-                return $this->count('constants', $fullyQualifiedName)
-                    && !defined($fullyQualifiedName);
+                if (
+                    !$this->isInIf ||
+                    !isset($this->counts['constants'][$fullyQualifiedName])
+                ) {
+                    return $this->count('constants', $fullyQualifiedName)
+                           && !defined($fullyQualifiedName);
+                }
             }
         }
 
@@ -404,12 +415,24 @@ class NodeVisitor extends NodeVisitorAbstract
             && $node->expr->var instanceof Variable
             && is_string($node->expr->var->name)
         ) {
-            $this->count('globals', $node->expr->var->name);
             // We'll keep regular global variable declarations, depending on
             // whether or not they are documented.
-            if ($node->getDocComment()) {
+            // Only @var comments are actual, useful documentation for stubs
+            $hasValidComment = $node->getDocComment() && preg_match('/@(?:[a-z]+-)?var\s/', $node->getDocComment()->getText());
+
+            if ($this->needsDocumentedGlobals && $hasValidComment) {
+                $this->count('globals', $node->expr->var->name);
                 return $this->needsDocumentedGlobals;
-            } else {
+            }
+
+            if ($this->needsUndocumentedGlobals && !$hasValidComment) {
+                $this->count('globals', $node->expr->var->name);
+
+                // remove useless comments
+                if ($node->getComments() !== []) {
+                    $node->setAttribute('comments', []);
+                }
+
                 return $this->needsUndocumentedGlobals;
             }
         }

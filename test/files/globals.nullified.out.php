@@ -1,10 +1,14 @@
 <?php
-/** doc */
+/** @var string */
 $a = \null;
 
-/** @doc */
+/** @var string $b */
 $b = \null;
 
 $c = \null;
 
 $d = \null;
+
+$x = \null;
+
+$y = \null;

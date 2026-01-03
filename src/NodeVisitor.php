@@ -376,8 +376,14 @@ class NodeVisitor extends NodeVisitorAbstract
                     $node->consts,
                     function (\PhpParser\Node\Const_ $const) {
                         $fullyQualifiedName = $const->name->name;
-                        return $this->count('constants', $fullyQualifiedName)
-                            && !defined($fullyQualifiedName);
+
+                        if (
+                            !$this->isInIf ||
+                            !isset($this->counts['constants'][$fullyQualifiedName])
+                        ) {
+                            return $this->count('constants', $fullyQualifiedName)
+                                   && !defined($fullyQualifiedName);
+                        }
                     }
                 );
 
@@ -392,8 +398,13 @@ class NodeVisitor extends NodeVisitorAbstract
             ) {
                 $fullyQualifiedName = $node->expr->args[0]->value->value;
 
-                return $this->count('constants', $fullyQualifiedName)
-                    && !defined($fullyQualifiedName);
+                if (
+                    !$this->isInIf ||
+                    !isset($this->counts['constants'][$fullyQualifiedName])
+                ) {
+                    return $this->count('constants', $fullyQualifiedName)
+                           && !defined($fullyQualifiedName);
+                }
             }
         }
 

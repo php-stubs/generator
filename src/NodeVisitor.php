@@ -417,10 +417,13 @@ class NodeVisitor extends NodeVisitorAbstract
         ) {
             // We'll keep regular global variable declarations, depending on
             // whether or not they are documented.
-            if ($this->needsDocumentedGlobals && $node->getDocComment()) {
+            // Only @var comments are actual, useful documentation for stubs
+			$hasValidComment = $node->getDocComment() && preg_match('/@(?:[a-z]+-)?var\s/', $node->getDocComment()->getText());
+
+            if ($this->needsDocumentedGlobals && $hasValidComment) {
                 $this->count('globals', $node->expr->var->name);
                 return $this->needsDocumentedGlobals;
-            } elseif ($this->needsUndocumentedGlobals) {
+            } elseif ($this->needsUndocumentedGlobals && !$hasValidComment) {
                 $this->count('globals', $node->expr->var->name);
                 return $this->needsUndocumentedGlobals;
             }

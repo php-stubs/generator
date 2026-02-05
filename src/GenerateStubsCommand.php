@@ -22,8 +22,7 @@ use Symfony\Component\Finder\SplFileInfo;
 class GenerateStubsCommand extends Command
 {
     /**
-     * @var (string|int)[][]
-     * @psalm-var array<int,array{0: string, 1: string, 2: int}>
+     * @var array<int, array{0: string, 1: int}>
      */
     private const SYMBOL_OPTIONS = [
         ['functions', StubsGenerator::FUNCTIONS],
@@ -37,13 +36,11 @@ class GenerateStubsCommand extends Command
     ];
 
     /**
-     * @psalm-suppress PropertyNotSetInConstructor
      * @var Filesystem
      */
     private $filesystem;
 
     /**
-     * @psalm-suppress PropertyNotSetInConstructor
      * @var string|null
      */
     private $outFile;

@@ -89,11 +89,12 @@ class StubsGenerator
 
     /** @var int */
     private $symbols;
-    /** @var array */
+    /** @var array<mixed> */
     private $config;
 
     /**
      * @param int $symbols Bitmask of symbol types to include in the stubs.
+     * @param array<mixed> $config
      */
     public function __construct(int $symbols = self::DEFAULT, array $config = [])
     {

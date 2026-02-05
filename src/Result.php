@@ -10,6 +10,8 @@ use Traversable;
 /**
  * Contains the results of stub generation, including the stubs themselves as
  * well as some metadata.
+ *
+ * @implements IteratorAggregate<int, \PhpParser\Node>
  */
 class Result implements IteratorAggregate
 {
@@ -17,16 +19,14 @@ class Result implements IteratorAggregate
     private $visitor;
 
     /**
-     * @var \Exception[]
-     * @psalm-var array<string, \Exception>
+     * @var array<string, \Exception>
      */
     private $unparsed;
 
     /**
      * @param NodeVisitor $visitor The visitor which was used to generate stubs.
-     * @param \Exception[] $unparsed A map of file path => reason for any
-     *                               unparsed files.
-     * @psalm-param $unparsed array<string, \Exception>
+     * @param array<string, \Exception> $unparsed A map of file path => reason
+     *                                            for any unparsed files.
      */
     public function __construct(NodeVisitor $visitor, array $unparsed)
     {
@@ -43,7 +43,7 @@ class Result implements IteratorAggregate
      * Returns the list of stub statements, which can be pretty-printed or
      * operated on further.
      *
-     * @return \PhpParser\Node[]
+     * @return array<\PhpParser\Node>
      */
     public function getStubStmts(): array
     {
@@ -54,12 +54,7 @@ class Result implements IteratorAggregate
      * Returns a map of symbol type to count of unique symbols of that type
      * which are included in the stubs.
      *
-     * Psalm doesn't seem to parse this correctly.
-     * @psalm-suppress InvalidReturnType
-     * @psalm-suppress InvalidReturnStatement
-     *
-     * @return int[]
-     * @psalm-return array<string, int>
+     * @return array<string, int>
      */
     public function getStats(): array
     {
@@ -70,8 +65,7 @@ class Result implements IteratorAggregate
      * Returns a list which includes any symbols for which more than one
      * declaration was found during stub generation.
      *
-     * @return (string|int)[][]
-     * @psalm-return array<array{ type: string, name: string, count: int }>
+     * @return array<array{type: string, name: string, count: int}>
      */
     public function getDuplicates(): array
     {

@@ -2,6 +2,7 @@
 namespace StubsGenerator;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\ConstFetch;
@@ -24,6 +25,10 @@ use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
+
+use function count;
+use function defined;
+use function is_string;
 
 /**
  * On node traversal, this visitor converts any AST to one just containing stub
@@ -53,22 +58,21 @@ class NodeVisitor extends NodeVisitorAbstract
     private $includeInaccessibleClassNodes;
 
     /**
-     * @psalm-suppress PropertyNotSetInConstructor
-     * @var Node[]
+     * @var array<Node>
      */
     protected $stack;
 
-    /** @var Namespace_[] */
+    /** @var array<Namespace_> */
     private $namespaces = [];
     /** @var Namespace_ */
     private $globalNamespace;
-    /** @var Node[] */
+    /** @var array<Node> */
     private $globalExpressions = [];
-    /** @var ClassLikeWithDependencies[] */
+    /** @var array<string, ClassLikeWithDependencies> */
     private $classLikes = [];
-    /** @var true[] */
+    /** @var array<string, true> */
     private $resolvedClassLikes = [];
-    /** @var Namespace_[] */
+    /** @var array<Namespace_> */
     private $classLikeNamespaces = [];
     /** @var Namespace_|null */
     private $currentClassLikeNamespace = null;
@@ -79,8 +83,7 @@ class NodeVisitor extends NodeVisitorAbstract
     private $isInIf = false;
 
     /**
-     * @var int[][]
-     * @psalm-var array<string, array<string, int>>
+     * @var array<string, array<string, int>>
      */
     private $counts = [
         'functions' => [],
@@ -93,6 +96,8 @@ class NodeVisitor extends NodeVisitorAbstract
 
     /**
      * @param int $symbols Set of symbol types to include stubs for.
+     * @param array<mixed> $config
+     * @return void
      */
     public function init(int $symbols = StubsGenerator::DEFAULT, array $config = [])
     {
@@ -113,6 +118,7 @@ class NodeVisitor extends NodeVisitorAbstract
     public function beforeTraverse(array $nodes)
     {
         $this->stack = [];
+        return null;
     }
 
     public function enterNode(Node $node)
@@ -121,7 +127,7 @@ class NodeVisitor extends NodeVisitorAbstract
 
         if ($node instanceof Namespace_) {
             // We always need to parse the children of namespaces.
-            return;
+            return null;
         }
 
         if (($this->needsClasses && $node instanceof Class_)
@@ -180,7 +186,7 @@ class NodeVisitor extends NodeVisitorAbstract
                 // We'll examine the first level inside of an if statement to
                 // look for function/class/etc. declarations.
                 $this->isInIf = true;
-                return; // Traverse children.
+                return null; // Traverse children.
             }
         }
 
@@ -188,6 +194,7 @@ class NodeVisitor extends NodeVisitorAbstract
             // Don't bother parsing descendents of uninteresting nodes.
             return NodeTraverser::DONT_TRAVERSE_CHILDREN;
         }
+        return null;
     }
 
     public function leaveNode(Node $node, bool $preserveStack = false)
@@ -231,12 +238,12 @@ class NodeVisitor extends NodeVisitorAbstract
 
         if ($node instanceof Namespace_) {
             $this->namespaces[] = $node;
-            return;
+            return null;
         }
 
         if ($node instanceof Name) {
             // Can't delete namespace names!
-            return;
+            return null;
         }
 
         if ($parent && !($parent instanceof Namespace_)) {
@@ -250,7 +257,7 @@ class NodeVisitor extends NodeVisitorAbstract
                 }
             }
 
-            return;
+            return null;
         }
 
         $namespaceName = ($parent && $parent->name) ? $parent->name->toString() : '';
@@ -265,7 +272,7 @@ class NodeVisitor extends NodeVisitorAbstract
             } elseif ($parent) {
                 // If we're here, `$parent` is a namespace.  Let's just keep the
                 // `$node` around in `$parent->stmts`.
-                return; // Don't remove.
+                return null; // Don't remove.
             } elseif ($node instanceof Stmt) {
                 // Anything other than a namespace which doesn't have a parent
                 // node must belong in the global namespace. We can still remove
@@ -290,12 +297,13 @@ class NodeVisitor extends NodeVisitorAbstract
         $this->namespaces = array_filter($this->namespaces, function (Namespace_ $ns): bool {
             return (bool) $ns->stmts;
         });
+        return null;
     }
 
     /**
      * Returns the stored set of stub nodes which are built up during traversal.
      *
-     * @return Node[]
+     * @return array<Node>
      */
     public function getStubStmts(): array
     {
@@ -325,7 +333,7 @@ class NodeVisitor extends NodeVisitorAbstract
      *
      * These counts are built up during traversal.
      *
-     * @psalm-return array<string, array<string, int>>
+     * @return array<string, array<string, int>>
      */
     public function getCounts(): array
     {
@@ -394,7 +402,9 @@ class NodeVisitor extends NodeVisitorAbstract
                 $node instanceof Expression &&
                 $node->expr instanceof FuncCall &&
                 $node->expr->name instanceof Name &&
-                $node->expr->name->getFirst() === 'define'
+                $node->expr->name->getFirst() === 'define' &&
+                $node->expr->args[0] instanceof Arg &&
+                $node->expr->args[0]->value instanceof String_
             ) {
                 $fullyQualifiedName = $node->expr->args[0]->value->value;
 

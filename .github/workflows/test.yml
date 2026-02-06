@@ -35,7 +35,7 @@ jobs:
         coverage: "none"
         php-version: "${{ matrix.php-version }}"
 
-    - name: "Vadliate composer"
+    - name: "Validate composer"
       run: "composer validate --strict"
 
     - name: "Install dependencies"

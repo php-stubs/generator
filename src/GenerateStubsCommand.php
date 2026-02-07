@@ -29,6 +29,7 @@ class GenerateStubsCommand extends Command
         ['classes', StubsGenerator::CLASSES],
         ['interfaces', StubsGenerator::INTERFACES],
         ['traits', StubsGenerator::TRAITS],
+        ['enums', StubsGenerator::ENUMS],
         ['documented-globals', StubsGenerator::DOCUMENTED_GLOBALS],
         ['undocumented-globals', StubsGenerator::UNDOCUMENTED_GLOBALS],
         ['globals', StubsGenerator::GLOBALS],

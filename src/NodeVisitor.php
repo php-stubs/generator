@@ -16,6 +16,7 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Const_;
+use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\If_;
@@ -46,6 +47,8 @@ class NodeVisitor extends NodeVisitorAbstract
     private $needsTraits;
     /** @var bool */
     private $needsInterfaces;
+    /** @var bool */
+    private $needsEnums;
     /** @var bool */
     private $needsDocumentedGlobals;
     /** @var bool */
@@ -90,6 +93,7 @@ class NodeVisitor extends NodeVisitorAbstract
         'classes' => [],
         'interfaces' => [],
         'traits' => [],
+        'enums' => [],
         'constants' => [],
         'globals' => [],
     ];
@@ -105,6 +109,7 @@ class NodeVisitor extends NodeVisitorAbstract
         $this->needsClasses = ($symbols & StubsGenerator::CLASSES) !== 0;
         $this->needsTraits = ($symbols & StubsGenerator::TRAITS) !== 0;
         $this->needsInterfaces = ($symbols & StubsGenerator::INTERFACES) !== 0;
+        $this->needsEnums = ($symbols & StubsGenerator::ENUMS) !== 0;
         $this->needsDocumentedGlobals = ($symbols & StubsGenerator::DOCUMENTED_GLOBALS) !== 0;
         $this->needsUndocumentedGlobals = ($symbols & StubsGenerator::UNDOCUMENTED_GLOBALS) !== 0;
         $this->needsConstants = ($symbols & StubsGenerator::CONSTANTS) !== 0;
@@ -133,6 +138,7 @@ class NodeVisitor extends NodeVisitorAbstract
         if (($this->needsClasses && $node instanceof Class_)
             || ($this->needsInterfaces && $node instanceof Interface_)
             || ($this->needsTraits && $node instanceof Trait_)
+            || ($this->needsEnums && $node instanceof Enum_)
         ) {
             // We'll need to parse all descendents of these nodes (if we plan to
             // include them in the stubs at all) so we get method, property, and
@@ -209,6 +215,7 @@ class NodeVisitor extends NodeVisitorAbstract
             || $node instanceof Class_
             || $node instanceof Interface_
             || $node instanceof Trait_
+            || $node instanceof Enum_
             || $node instanceof Const_
             || (
                 $node instanceof Expression &&
@@ -248,11 +255,14 @@ class NodeVisitor extends NodeVisitorAbstract
 
         if ($parent && !($parent instanceof Namespace_)) {
             // Implies `$parent instanceof ClassLike`, which means $node is a
-            // either a method, property, or constant, or its part of the
-            // declaration itself (e.g., `extends`).
+            // either a method, property, or constant, or enum case, or its part
+            // of the declaration itself (e.g., `extends`).
 
-            if (!$this->includeInaccessibleClassNodes && $parent instanceof Class_ && ($node instanceof ClassMethod || $node instanceof ClassConst || $node instanceof Property)) {
-                if ($node->isPrivate() || ($parent->isFinal() && $node->isProtected())) {
+             if (!$this->includeInaccessibleClassNodes && ($parent instanceof Class_ || $parent instanceof Enum_) && ($node instanceof ClassMethod || $node instanceof ClassConst || $node instanceof Property)) {
+                if ($node->isPrivate()
+                    || ($parent instanceof Class_ && $parent->isFinal() && $node->isProtected())
+                    || ($parent instanceof Enum_ && $node->isProtected())
+                ) {
                     return NodeTraverser::REMOVE_NODE;
                 }
             }
@@ -376,6 +386,12 @@ class NodeVisitor extends NodeVisitorAbstract
             return $this->needsTraits
                 && $this->count('traits', $fullyQualifiedName)
                 && !trait_exists($fullyQualifiedName);
+        }
+
+        if ($node instanceof Enum_) {
+            return $this->needsEnums
+                && $this->count('enums', $fullyQualifiedName)
+                && !enum_exists($fullyQualifiedName);
         }
 
         if ($this->needsConstants) {

@@ -29,6 +29,7 @@ class GenerateStubsCommand extends Command
         ['classes', StubsGenerator::CLASSES],
         ['interfaces', StubsGenerator::INTERFACES],
         ['traits', StubsGenerator::TRAITS],
+        ['enums', StubsGenerator::ENUMS],
         ['documented-globals', StubsGenerator::DOCUMENTED_GLOBALS],
         ['undocumented-globals', StubsGenerator::UNDOCUMENTED_GLOBALS],
         ['globals', StubsGenerator::GLOBALS],
@@ -82,7 +83,7 @@ class GenerateStubsCommand extends Command
             }
 
             $io = new SymfonyStyle($input, $output);
-            $message = "The file '{$this->outFile}' already exists.  Overwrite?";
+            $message = "The file '{$this->outFile}' already exists. Overwrite?";
             if (!$input->getOption('force') && !$io->confirm($message, false)) {
                 exit(1);
             }

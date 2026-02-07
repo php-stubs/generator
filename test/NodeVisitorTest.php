@@ -47,6 +47,9 @@ class NodeVisitorTest extends TestCase
             'junk',
             'namespaces',
             'constants',
+            'enums',
+            ['enums', 'enums-include-inaccessible-class-nodes', null, ['include_inaccessible_class_nodes' => true]],
+            ['enums', 'enums-default-symbols', StubsGenerator::DEFAULT],
         ];
 
         $baseDir = __DIR__ . '/files/';

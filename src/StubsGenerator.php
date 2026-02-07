@@ -74,6 +74,13 @@ class StubsGenerator
     public const CONSTANTS = 64;
 
     /**
+     * Enum symbol type.
+     *
+     * @var int
+     */
+    public const ENUMS = 128;
+
+    /**
      * The default set of symbol types.
      *
      * @var int
@@ -85,7 +92,7 @@ class StubsGenerator
      *
      * @var int
      */
-    public const ALL = self::FUNCTIONS | self::CLASSES | self::TRAITS | self::INTERFACES | self::GLOBALS | self::CONSTANTS;
+    public const ALL = self::FUNCTIONS | self::CLASSES | self::TRAITS | self::INTERFACES | self::ENUMS | self::GLOBALS | self::CONSTANTS;
 
     /** @var int */
     private $symbols;

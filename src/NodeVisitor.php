@@ -231,7 +231,7 @@ class NodeVisitor extends NodeVisitorAbstract
         if ($node instanceof If_) {
             // Replace the if statement with its set of children, but only those
             // that we want.  Have to manually call leaveNode on each; it won't
-            // be called automatically..
+            // be called automatically.
             $stmts = [];
             foreach ($node->stmts as $stmt) {
                 if ($this->leaveNode($stmt, true) !== NodeTraverser::REMOVE_NODE) {

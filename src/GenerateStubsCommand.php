@@ -83,7 +83,7 @@ class GenerateStubsCommand extends Command
             }
 
             $io = new SymfonyStyle($input, $output);
-            $message = "The file '{$this->outFile}' already exists.  Overwrite?";
+            $message = "The file '{$this->outFile}' already exists. Overwrite?";
             if (!$input->getOption('force') && !$io->confirm($message, false)) {
                 exit(1);
             }

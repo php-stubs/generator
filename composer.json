@@ -24,7 +24,7 @@
     ],
     "require": {
         "php": "^7.3 || ^8.0",
-        "nikic/php-parser": "^4.10 || ^5.1",
+        "nikic/php-parser": "^4.18 || ^5.5",
         "symfony/console": "^5.1 || ^6.0 || ^7.0",
         "symfony/filesystem": "^5.0 || ^6.0 || ^7.0",
         "symfony/finder": "^5.0 || ^6.0 || ^7.0"

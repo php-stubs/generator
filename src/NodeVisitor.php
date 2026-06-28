@@ -1,6 +1,11 @@
 <?php
 namespace StubsGenerator;
 
+use function count;
+use function defined;
+use function is_string;
+use function ltrim;
+use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ArrayDimFetch;
@@ -19,17 +24,18 @@ use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
+
 use PhpParser\Node\Stmt\Trait_;
+use PhpParser\Node\Stmt\Use_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
-
-use function count;
-use function defined;
-use function is_string;
+use function sprintf;
+use function strtolower;
 
 /**
  * On node traversal, this visitor converts any AST to one just containing stub
@@ -59,6 +65,10 @@ class NodeVisitor extends NodeVisitorAbstract
     private $nullifyGlobals;
     /** @var bool */
     private $includeInaccessibleClassNodes;
+    /** @var array<string, string> */
+    private $useAliases = [];
+    /** @var PhpDocFqcnRewriter */
+    private $fqcnRewriter;
 
     /**
      * @var array<Node>
@@ -118,17 +128,22 @@ class NodeVisitor extends NodeVisitorAbstract
         $this->includeInaccessibleClassNodes = ($config['include_inaccessible_class_nodes'] ?? false) === true;
 
         $this->globalNamespace = new Namespace_();
+        $this->fqcnRewriter = new PhpDocFqcnRewriter();
     }
 
     public function beforeTraverse(array $nodes)
     {
         $this->stack = [];
+        $this->useAliases = [];
         return null;
     }
 
     public function enterNode(Node $node)
     {
         $this->stack[] = $node;
+
+        $this->trackUseStatements($node);
+        $this->rewriteImportedNames($node);
 
         if ($node instanceof Namespace_) {
             // We always need to parse the children of namespaces.
@@ -156,7 +171,8 @@ class NodeVisitor extends NodeVisitorAbstract
             // signatures are fully qualified by the `NameResolver` visitor.
             // (This will already be `true` if it's a ClassMethod.)
             $this->isInDeclaration = true;
-        } elseif ($node instanceof Expression
+        } elseif (
+            $node instanceof Expression
             && $node->expr instanceof Assign
         ) {
             // Since we don't parse any the bodies of any statements which can
@@ -164,7 +180,8 @@ class NodeVisitor extends NodeVisitorAbstract
             // assigns are for globals.  Check if we are assigning to `$GLOBALS`
             // with a simple string that's a valid variable identifier.  If so,
             // convert it to a normal variable assignment.
-            if (count($this->stack) === 1
+            if (
+                count($this->stack) === 1
                 && $node->expr->var instanceof ArrayDimFetch
                 && $node->expr->var->var instanceof Variable
                 && $node->expr->var->var->name === 'GLOBALS'
@@ -201,6 +218,77 @@ class NodeVisitor extends NodeVisitorAbstract
             return NodeTraverser::DONT_TRAVERSE_CHILDREN;
         }
         return null;
+    }
+
+    private function trackUseStatements(Node $node): void
+    {
+        if ($node instanceof Namespace_) {
+            $this->useAliases = [];
+            return;
+        }
+
+        if ($node instanceof Use_) {
+            foreach ($node->uses as $use) {
+                $this->addAlias($use, $node->type, '');
+            }
+            return;
+        }
+
+        if (!($node instanceof GroupUse)) {
+            return;
+        }
+
+        $prefix = sprintf('%s\\', $node->prefix->toString());
+        foreach ($node->uses as $use) {
+            $this->addAlias($use, $node->type, $prefix);
+        }
+    }
+
+    /**
+     * @param \PhpParser\Node\UseItem $useItem
+     */
+    private function addAlias(Node $useItem, int $type, string $prefix): void
+    {
+        if ($useItem->type !== Use_::TYPE_UNKNOWN) {
+            $type = $useItem->type;
+        }
+
+        if ($type !== Use_::TYPE_NORMAL) {
+            return;
+        }
+
+        $alias = strtolower($useItem->getAlias()->toString());
+        $fullyQualifiedName = ltrim(sprintf('%s%s', $prefix, $useItem->name->toString()), '\\');
+
+        $this->useAliases[$alias] = sprintf('\\%s', $fullyQualifiedName);
+    }
+
+    private function rewriteImportedNames(Node $node): void
+    {
+        if (
+            !($node instanceof Function_)
+            && !($node instanceof ClassMethod)
+            && !($node instanceof Property)
+            && !($node instanceof ClassLike)
+        ) {
+            return;
+        }
+
+        $docComment = $node->getDocComment();
+        if (!($docComment instanceof Doc)) {
+            return;
+        }
+
+        if ($this->useAliases === []) {
+            return;
+        }
+
+        $newText = $this->fqcnRewriter->rewrite($docComment->getText(), $this->useAliases);
+        if ($newText === $docComment->getText()) {
+            return;
+        }
+
+        $node->setDocComment(new Doc($newText, $docComment->getStartLine(), $docComment->getStartFilePos()));
     }
 
     public function leaveNode(Node $node, bool $preserveStack = false)
@@ -258,8 +346,9 @@ class NodeVisitor extends NodeVisitorAbstract
             // either a method, property, or constant, or enum case, or its part
             // of the declaration itself (e.g., `extends`).
 
-             if (!$this->includeInaccessibleClassNodes && ($parent instanceof Class_ || $parent instanceof Enum_) && ($node instanceof ClassMethod || $node instanceof ClassConst || $node instanceof Property)) {
-                if ($node->isPrivate()
+            if (!$this->includeInaccessibleClassNodes && ($parent instanceof Class_ || $parent instanceof Enum_) && ($node instanceof ClassMethod || $node instanceof ClassConst || $node instanceof Property)) {
+                if (
+                    $node->isPrivate()
                     || ($parent instanceof Class_ && $parent->isFinal() && $node->isProtected())
                     || ($parent instanceof Enum_ && $node->isProtected())
                 ) {
@@ -406,7 +495,7 @@ class NodeVisitor extends NodeVisitorAbstract
                             !isset($this->counts['constants'][$fullyQualifiedName])
                         ) {
                             return $this->count('constants', $fullyQualifiedName)
-                                   && !defined($fullyQualifiedName);
+                                && !defined($fullyQualifiedName);
                         }
                     }
                 );
@@ -429,7 +518,7 @@ class NodeVisitor extends NodeVisitorAbstract
                     !isset($this->counts['constants'][$fullyQualifiedName])
                 ) {
                     return $this->count('constants', $fullyQualifiedName)
-                           && !defined($fullyQualifiedName);
+                        && !defined($fullyQualifiedName);
                 }
             }
         }

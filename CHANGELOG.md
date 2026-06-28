@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- PHPDoc type names that depend on `use` imports (e.g. in `@param`, `@return`, `@var`, `@throws`, `@property`, `@method`, `@mixin`, and `@phpstan-*` tags) are now resolved to their fully qualified form in generated stubs, while template names, array/object shape keys, and reserved/built-in types are left untouched.
+### Changed
+- Minimum supported PHP version raised to 7.4 (required by `phpstan/phpdoc-parser` 2.x).
+
 ## [0.5] - 2018-04-13
 ### Added
 - `--nullify-globals` option: converts all global variable assignments to `null`.
